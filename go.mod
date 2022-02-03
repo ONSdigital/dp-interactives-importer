@@ -3,10 +3,10 @@ module github.com/ONSdigital/dp-interactives-importer
 go 1.17
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.34.3
+	github.com/ONSdigital/dp-api-clients-go v1.43.0
 	github.com/ONSdigital/dp-healthcheck v1.2.3
 	github.com/ONSdigital/dp-kafka/v2 v2.4.4
-	github.com/ONSdigital/dp-net v1.0.12
+	github.com/ONSdigital/dp-net v1.2.0
 	github.com/ONSdigital/dp-s3 v1.10.0
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e
 	github.com/ONSdigital/log.go/v2 v2.0.9
@@ -17,7 +17,6 @@ require (
 )
 
 require (
-	github.com/ONSdigital/log.go v1.0.1 // indirect
 	github.com/Shopify/sarama v1.30.1 // indirect
 	github.com/aws/aws-sdk-go v1.40.13 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
