@@ -8,7 +8,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-//go:generate moq -out mock/handler.go -pkg mock . Handler
+//go:generate moq -out mocks/handler.go -pkg mocks_importer . Handler
 
 // Handler represents a handler for processing a single event.
 type Handler interface {

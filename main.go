@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/ONSdigital/dp-interactives-importer/service"
 	"github.com/ONSdigital/dp-interactives-importer/config"
+	"github.com/ONSdigital/dp-interactives-importer/service"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )

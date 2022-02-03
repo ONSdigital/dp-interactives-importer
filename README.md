@@ -25,6 +25,10 @@ Reads interactive event (visualisations), parse the content and push visualisati
 | KAFKA_CONSUMER_WORKERS | 1                              | The maximum number of parallel kafka consumers               |
 | INTERACTIVES_GROUP     | dp-interactives-importer       | The consumer group this application uses                     |
 
+### Resources
+
+Scripts for updating and debugging Kafka can be found here https://github.com/ONSdigital/dp-data-tools
+
 ### License
 
 Copyright © 2022, Office for National Statistics (https://www.ons.gov.uk)

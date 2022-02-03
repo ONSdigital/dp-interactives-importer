@@ -11,9 +11,9 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 )
 
-//go:generate moq -out mock/initialiser.go -pkg mock . Initialiser
-//go:generate moq -out mock/server.go -pkg mock . HTTPServer
-//go:generate moq -out mock/healthcheck.go -pkg mock . HealthChecker
+//go:generate moq -out mocks/initialiser.go -pkg mocks_service . Initialiser
+//go:generate moq -out mocks/server.go -pkg mocks_service . HTTPServer
+//go:generate moq -out mocks/healthcheck.go -pkg mocks_service . HealthChecker
 
 // Initialiser defines the methods to initialise external services
 type Initialiser interface {
