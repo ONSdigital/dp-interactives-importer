@@ -8,7 +8,8 @@ var visualisationUploadedEvent = `{
   "type": "record",
   "name": "visualisation-uploaded",
   "fields": [
-    {"name": "path", "type": "string", "default": ""},
+    {"name": "id", "type": "string"},
+    {"name": "path", "type": "string"}
   ]
 }`
 

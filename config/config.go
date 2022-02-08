@@ -35,7 +35,7 @@ func Get() (*Config, error) {
 		return cfg, nil
 	}
 
-	cfg := &Config{
+	cfg = &Config{
 		BindAddr:                   "localhost:27400",
 		AwsRegion:                  "eu-west-1",
 		DownloadBucketName:         "dp-interactives-file-uploads",
@@ -43,8 +43,8 @@ func Get() (*Config, error) {
 		Brokers:                    []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,
-		InteractivesReadTopic:      "interactives-visualisations-api",
-		InteractivesWriteTopic:     "interactives-visualisations-importer",
+		InteractivesReadTopic:      "dp-interactives-read-topic",
+		InteractivesWriteTopic:     "dp-interactives-write-topic",
 		KafkaConsumerWorkers:       1,
 		InteractivesGroup:          "dp-interactives-importer",
 		GracefulShutdownTimeout:    5 * time.Second,
