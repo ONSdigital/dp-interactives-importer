@@ -59,9 +59,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, nil, nil, nil); err != nil {
+	/*if err := registerCheckers(ctx, cfg, hc, nil, nil, nil); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
-	}
+	}*/
 
 	r.StrictSlash(true).Path("/health").Methods(http.MethodGet).HandlerFunc(hc.Handler)
 	hc.Start(ctx)
