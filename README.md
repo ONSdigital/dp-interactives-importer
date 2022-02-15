@@ -1,4 +1,5 @@
 # dp-interactives-importer
+
 Reads interactive event (visualisations), parse the content and push visualisations to S3 bucket.
 
 ### Dependencies
@@ -6,6 +7,9 @@ Reads interactive event (visualisations), parse the content and push visualisati
 * No further dependencies other than those defined in `go.mod`
 
 ### Configuration
+
+| Environment variable         | Default                           | Description                                           |
+|------------------------------|-----------------------------------|-------------------------------------------------------|
 | BIND_ADDR                    | 27500                             | The host and port to bind to
 | AWS_REGION                   | eu-west-1                         | The AWS region
 | UPLOAD_BUCKET_NAME           | dp-interactives-visual-uploads    | Name of the S3 bucket to upload the processed visualisations
@@ -23,6 +27,6 @@ Reads interactive event (visualisations), parse the content and push visualisati
 
 ### License
 
-Copyright © 2021, Office for National Statistics (https://www.ons.gov.uk)
+Copyright © 2022, Office for National Statistics (https://www.ons.gov.uk)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
