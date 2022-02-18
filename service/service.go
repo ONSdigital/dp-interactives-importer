@@ -101,7 +101,6 @@ func (svc *Service) Close(ctx context.Context) error {
 			svc.healthCheck.Stop()
 		}
 
-
 		if svc.serviceList.KafkaProducer {
 			if err := svc.kafkaProducer.Close(ctx); err != nil {
 				log.Error(ctx, "error closing Kafka producer", err)
