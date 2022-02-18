@@ -20,5 +20,4 @@ type S3Interface interface {
 
 type UploadService interface {
 	Send(file *File, title, collectionId, filename, licence, licenceUrl string) error
-	Close()
 }

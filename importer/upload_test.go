@@ -13,12 +13,13 @@ import (
 func TestNoOpUploadService(t *testing.T) {
 	fakeHttp := httpfake.New()
 	fakeHttp.NewHandler().Post("/v1/upload").Reply(200)
-
+	url := fakeHttp.ResolveURL("")
+	defer fakeHttp.Close()
+	
 	testContent := "this is some dummy content"
 	size := int64(len(testContent))
 
-	svc, err := importer.NewApiUploadService(fakeHttp, size/4)
-	defer svc.Close()
+	svc, err := importer.NewApiUploadService(url, size/4)
 	assert.Nil(t, err)
 	assert.NotNil(t, svc)
 

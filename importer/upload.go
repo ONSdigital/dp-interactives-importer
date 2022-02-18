@@ -3,7 +3,6 @@ package importer
 import (
 	"context"
 	openapi "github.com/ONSdigital/dp-interactives-importer/internal/client/dp-upload-service/go"
-	"github.com/maxcnunes/httpfake"
 	"os"
 )
 
@@ -16,10 +15,10 @@ type Upload struct {
 	TotalChunks, TotalSize                             int64
 }
 
-func NewApiUploadService(fakeHttp *httpfake.HTTPFake, chunkSize int64) (*ApiUploadService, error) {
+func NewApiUploadService(apiUrl string, chunkSize int64) (*ApiUploadService, error) {
 	cfg := openapi.NewConfiguration()
 	cfg.Servers = openapi.ServerConfigurations{
-		{URL: fakeHttp.ResolveURL("")},
+		{URL: apiUrl},
 	}
 
 	c := chunkSize
@@ -28,7 +27,6 @@ func NewApiUploadService(fakeHttp *httpfake.HTTPFake, chunkSize int64) (*ApiUplo
 	}
 
 	return &ApiUploadService{
-		fakeHttp:  fakeHttp,
 		chunkSize: c,
 		client:    openapi.NewAPIClient(cfg),
 	}, nil
@@ -38,7 +36,6 @@ func NewApiUploadService(fakeHttp *httpfake.HTTPFake, chunkSize int64) (*ApiUplo
 //todo handle duplicates/replace? - path name convention
 
 type ApiUploadService struct {
-	fakeHttp  *httpfake.HTTPFake
 	client    *openapi.APIClient
 	chunkSize int64
 	Uploads   []Upload
@@ -82,8 +79,4 @@ func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionI
 	})
 
 	return nil
-}
-
-func (s ApiUploadService) Close() {
-	s.fakeHttp.Close()
 }
