@@ -15,21 +15,21 @@ func TestNoOpUploadService(t *testing.T) {
 	fakeHttp.NewHandler().Post("/v1/upload").Reply(200)
 	url := fakeHttp.ResolveURL("")
 	defer fakeHttp.Close()
-	
+
 	testContent := "this is some dummy content"
 	size := int64(len(testContent))
 
-	svc, err := importer.NewApiUploadService(url, size/4)
+	svc, err := importer.NewApiUploadService(url, 1024)
 	assert.Nil(t, err)
 	assert.NotNil(t, svc)
 
 	f := &importer.File{
 		Name:        "testing.css",
-		ReadCloser:  ioutil.NopCloser(strings.NewReader(testContent)),
+		ReadCloser:  ioutil.NopCloser(strings.NewReader("this is some dummy content")),
 		SizeInBytes: &size,
 	}
 
-	err = svc.Send(context.TODO(), f, "title", "collectionId", "filename", "licence", "licenceUrl")
+	err = svc.Send(context.TODO(), f, "title", "collectionId", "licence", "licenceUrl")
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(svc.Uploads))
 }

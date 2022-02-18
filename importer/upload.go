@@ -2,12 +2,14 @@ package importer
 
 import (
 	"context"
+	"fmt"
 	openapi "github.com/ONSdigital/dp-interactives-importer/internal/client/dp-upload-service/go"
 	"os"
 )
 
 const (
-	defaultChunkSize = 1024
+	defaultChunkSize    = 1024
+	uploadRootDirectory = "interactives"
 )
 
 type Upload struct {
@@ -41,7 +43,7 @@ type ApiUploadService struct {
 	Uploads   []Upload
 }
 
-func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionId, filename, licence, licenceUrl string) error {
+func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionId, licence, licenceUrl string) error {
 	uploadFileFunc := func(currentChunk, totalChunks, totalSize int, mimetype string, tmpFile *os.File) error {
 		req := s.client.UploadFileAndProvideMetadataApi.V1UploadPost(ctx)
 		req.Title(title)
@@ -50,7 +52,7 @@ func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionI
 		req.Licence(licence)
 		req.LicenceUrl(licenceUrl)
 		req.IsPublishable(true) //todo isPublishable==true - assumes all files are publishable - confirm what this means (missing from swagger right now)
-		req.ResumableFilename(filename)
+		req.ResumableFilename(getUploadFilename(f.Name, collectionId))
 		req.ResumableChunkNumber(int32(currentChunk))
 		req.ResumableTotalChunks(int32(totalChunks))
 		req.ResumableTotalSize(int32(totalSize))
@@ -71,7 +73,7 @@ func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionI
 	s.Uploads = append(s.Uploads, Upload{
 		Title:        title,
 		CollectionId: collectionId,
-		Filename:     filename,
+		Filename:     f.Name,
 		Licence:      licence,
 		LicenceUrl:   licenceUrl,
 		TotalChunks:  totalChunks,
@@ -79,4 +81,8 @@ func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionI
 	})
 
 	return nil
+}
+
+func getUploadFilename(filename, collectionId string) string {
+	return fmt.Sprintf("/%s/%s/%s", uploadRootDirectory, collectionId, filename)
 }
