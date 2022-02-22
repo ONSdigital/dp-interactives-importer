@@ -9,7 +9,6 @@ import (
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
-	UploadBucketName           string        `envconfig:"UPLOAD_BUCKET_NAME"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`
 	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
 	KafkaMaxBytes              int           `envconfig:"KAFKA_MAX_BYTES"`
@@ -38,7 +37,6 @@ func Get() (*Config, error) {
 		BindAddr:                   "localhost:27400",
 		AwsRegion:                  "eu-west-1",
 		DownloadBucketName:         "dp-interactives-file-uploads",
-		UploadBucketName:           "dp-interactives-vis-uploads",
 		Brokers:                    []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,

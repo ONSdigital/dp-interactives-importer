@@ -112,7 +112,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafk
 
 // DoGetS3Uploaded returns a S3Client
 func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error) {
-	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.UploadBucketName)
+	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.DownloadBucketName)
 	if err != nil {
 		return nil, err
 	}
