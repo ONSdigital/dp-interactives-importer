@@ -41,7 +41,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Get upload service backend
-	uploadServiceBackend, err := serviceList.DoGetUploadServiceBackend(ctx, cfg)
+	uploadServiceBackend, err := serviceList.GetUploadServiceBackend(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise upload service", err)
 		return nil, err

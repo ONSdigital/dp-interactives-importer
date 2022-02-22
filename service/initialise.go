@@ -2,12 +2,8 @@ package service
 
 import (
 	"context"
-	"fmt"
 	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
 	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
@@ -65,8 +61,8 @@ func (e *ExternalServiceList) GetS3Client(ctx context.Context, cfg *config.Confi
 	return s3, nil
 }
 
-// DoGetUploadServiceBackend creates upload service backend and sets the UploadServiceBackend flag to true
-func (e *ExternalServiceList) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+// GetUploadServiceBackend creates upload service backend and sets the UploadServiceBackend flag to true
+func (e *ExternalServiceList) GetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
 	client, err := e.Init.DoGetUploadServiceBackend(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -130,24 +126,11 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafk
 
 // DoGetS3Uploaded returns a S3Client
 func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error) {
-	s, err := session.NewSession(&aws.Config{
-		Endpoint:         aws.String(cfg.AwsRegion),
-		Region:           aws.String("eu-west-1"),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials("test", "test", ""),
-	})
-
+	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.DownloadBucketName)
 	if err != nil {
-		fmt.Println("S3 ERROR: " + err.Error())
+		return nil, err
 	}
-
-	return dps3.NewClientWithSession(cfg.DownloadBucketName, s), nil
-
-	//s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.DownloadBucketName)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return s3Client, nil
+	return s3Client, nil
 }
 
 // DoGetUploadServiceBackend returns an upload service backend
