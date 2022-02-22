@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"mime"
 	"os"
 	"path/filepath"
@@ -16,29 +17,42 @@ type File struct {
 	Name        string
 	ReadCloser  io.ReadCloser
 	SizeInBytes *int64
+	Closed      bool
 }
 
 func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks, totalSize int64, err error) {
+	defer func(ReadCloser io.ReadCloser) {
+		e := ReadCloser.Close()
+		if e != nil {
+			err = e
+			return
+		}
+		f.Closed = true
+	}(f.ReadCloser)
+
 	mimetype := mime.TypeByExtension(filepath.Ext(f.Name))
 	if mimetype == "" {
 		err = fmt.Errorf("invalid file extension cannot determine mime type: %s", f.Name)
 		return
 	}
 
-	currentChunk, totalChunks, totalSize := 1, *f.SizeInBytes/chunkSize, *f.SizeInBytes
-	if totalChunks == 0 {
-		totalChunks = 1
+	currentChunk, totalExpectedChunks, totalSize := 0, math.Ceil(float64(totalSize/chunkSize)), *f.SizeInBytes
+	if totalExpectedChunks == 0 {
+		totalExpectedChunks = 1
 	}
 
 	r := bufio.NewReader(f.ReadCloser)
 	for {
+		currentChunk++
+
 		var n int
 		buf := make([]byte, chunkSize)
 		if n, err = r.Read(buf); n == 0 || err != nil {
 			if err != nil && err != io.EOF {
 				return
 			}
-			break //all done
+			err = nil //dont return io.EOF
+			break     //all done
 		}
 
 		//todo can we just send the []bytes instead?
@@ -51,20 +65,16 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 			return
 		}
 
-		if err = doFunc(int32(currentChunk), int32(totalChunks), int32(totalSize), mimetype, tmp); err != nil {
+		if err = doFunc(int32(currentChunk), int32(totalExpectedChunks), int32(totalSize), mimetype, tmp); err != nil {
 			return
 		}
 
 		if err = os.Remove(tmp.Name()); err != nil {
 			return
 		}
-
-		currentChunk++
 	}
 
-	if err = f.ReadCloser.Close(); err != nil {
-		return
-	}
+	totalChunks = int64(currentChunk - 1)
 
 	return
 }
