@@ -34,7 +34,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Get S3Uploaded client
-	/*s3Client, err := serviceList.GetS3Client(ctx, cfg)
+	s3Client, err := serviceList.GetS3Client(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise S3 client for uploaded bucket", err)
 		return nil, err
@@ -44,8 +44,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	importer.Consume(ctx, consumer, &importer.VisualisationUploadedHandler{
 		S3UploadBucket: cfg.UploadBucketName,
 		S3Interface:    s3Client,
-		Producer:       producer,
-	}, cfg.KafkaConsumerWorkers)*/
+	}, cfg.KafkaConsumerWorkers)
 
 	//heathcheck - start
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -53,7 +52,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, consumer, nil); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -132,10 +131,10 @@ func registerCheckers(ctx context.Context,
 		log.Error(ctx, "error adding check for published kafka consumer", err, log.Data{"group": cfg.InteractivesGroup, "topic": cfg.InteractivesReadTopic})
 	}
 
-	/*if err = hc.AddCheck("S3 checker", s3.Checker); err != nil {
+	if err = hc.AddCheck("S3 checker", s3.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for s3", err)
-	}*/
+	}
 
 	if hasErrors {
 		return errors.New("Error(s) registering checkers for healthcheck")
