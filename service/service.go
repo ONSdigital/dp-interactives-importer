@@ -28,7 +28,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
 	// Get Kafka consumer
-	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
+	/*consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
 		return nil, err
@@ -51,7 +51,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		S3UploadBucket: cfg.UploadBucketName,
 		S3Interface:    s3Client,
 		Producer:       producer,
-	}, cfg.KafkaConsumerWorkers)
+	}, cfg.KafkaConsumerWorkers)*/
 
 	//heathcheck - start
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -59,9 +59,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, producer, consumer, s3Client); err != nil {
+	/*if err := registerCheckers(ctx, cfg, hc, nil, nil, nil); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
-	}
+	}*/
 
 	r.StrictSlash(true).Path("/health").Methods(http.MethodGet).HandlerFunc(hc.Handler)
 	hc.Start(ctx)
@@ -78,8 +78,8 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		config:        cfg,
 		serviceList:   serviceList,
 		healthCheck:   nil,
-		kafkaProducer: producer,
-		kafkaConsumer: consumer,
+		kafkaProducer: nil,
+		kafkaConsumer: nil,
 	}, nil
 }
 

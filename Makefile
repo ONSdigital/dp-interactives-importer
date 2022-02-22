@@ -13,6 +13,10 @@ all: audit test build
 audit:
 	go list -m all | nancy sleuth
 
+.PHONY: lint
+lint:
+	echo "TODO"
+	
 .PHONY: build
 build:
 	go build -tags 'production' $(LDFLAGS) -o $(BINPATH)/dp-interactives-importer
@@ -26,6 +30,10 @@ debug:
 test:
 	go test -race -cover ./...
 
+.PHONY: test-component
+test-component:
+	echo "TODO"
+	
 .PHONY: convey
 convey:
 	goconvey ./...
