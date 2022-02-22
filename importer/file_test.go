@@ -64,7 +64,7 @@ func TestFile(t *testing.T) {
 			SizeInBytes: &size,
 		}
 
-		Convey("When split into 4 chunks", func() {
+		Convey("When attempt to split and do nothing with each chunk", func() {
 			totalChunks, err := f.SplitAndClose(size, doNothing)
 
 			Convey("Then there should an error returned with the filename", func() {
