@@ -8,8 +8,8 @@ import (
 
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	ApiRouterUrl               string        `envconfig:"API_ROUTER_URL"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
-	UploadBucketName           string        `envconfig:"UPLOAD_BUCKET_NAME"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`
 	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
 	KafkaMaxBytes              int           `envconfig:"KAFKA_MAX_BYTES"`
@@ -20,7 +20,6 @@ type Config struct {
 	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"             json:"-"`
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	InteractivesReadTopic      string        `envconfig:"INTERACTIVES_READ_TOPIC"`
-	InteractivesWriteTopic     string        `envconfig:"INTERACTIVES_WRITE_TOPIC"`
 	InteractivesGroup          string        `envconfig:"INTERACTIVES_GROUP"`
 	KafkaConsumerWorkers       int           `envconfig:"KAFKA_CONSUMER_WORKERS"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
@@ -37,14 +36,13 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   "localhost:27400",
-		AwsRegion:                  "eu-west-1",
-		DownloadBucketName:         "dp-interactives-file-uploads",
-		UploadBucketName:           "dp-interactives-vis-uploads",
-		Brokers:                    []string{"localhost:9092", "localhost:9093", "localhost:9094"},
+		ApiRouterUrl:               "http://localhost:25100", //todo this is dp-upload-service port
+		AwsRegion:                  "http://localhost:4566",
+		DownloadBucketName:         "testing",
+		Brokers:                    []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,
 		InteractivesReadTopic:      "dp-interactives-read-topic",
-		InteractivesWriteTopic:     "dp-interactives-write-topic",
 		KafkaConsumerWorkers:       1,
 		InteractivesGroup:          "dp-interactives-importer",
 		GracefulShutdownTimeout:    5 * time.Second,

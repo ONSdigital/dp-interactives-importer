@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-type FileProcessor func(currentChunk, totalChunks, totalSize int, mimetype string, tmpFile *os.File) error
+type FileProcessor func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error
 
 type File struct {
 	Name        string
@@ -21,22 +21,27 @@ type File struct {
 func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks, totalSize int64, err error) {
 	mimetype := mime.TypeByExtension(filepath.Ext(f.Name))
 	if mimetype == "" {
-		return 0, 0, fmt.Errorf("invalid file extension cannot determine mime type: %s", f.Name)
+		err = fmt.Errorf("invalid file extension cannot determine mime type: %s", f.Name)
+		return
 	}
 
 	currentChunk, totalChunks, totalSize := 1, *f.SizeInBytes/chunkSize, *f.SizeInBytes
+	if totalChunks == 0 {
+		totalChunks = 1
+	}
 
 	r := bufio.NewReader(f.ReadCloser)
 	for {
 		var n int
 		buf := make([]byte, chunkSize)
-		if n, err = r.Read(buf); n == 0 {
-			if err != io.EOF && err != nil {
+		if n, err = r.Read(buf); n == 0 || err != nil {
+			if err != nil && err != io.EOF {
 				return
 			}
 			break //all done
 		}
 
+		//todo can we just send the []bytes instead?
 		var tmp *os.File
 		if tmp, err = ioutil.TempFile("", "chunk_*"); err != nil {
 			return
@@ -46,7 +51,7 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 			return
 		}
 
-		if err = doFunc(currentChunk, int(totalChunks), int(totalSize), mimetype, tmp); err != nil {
+		if err = doFunc(int32(currentChunk), int32(totalChunks), int32(totalSize), mimetype, tmp); err != nil {
 			return
 		}
 

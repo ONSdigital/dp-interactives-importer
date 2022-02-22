@@ -3,6 +3,7 @@ package importer_test
 import (
 	"context"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	"github.com/maxcnunes/httpfake"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -19,8 +20,9 @@ func TestNoOpUploadService(t *testing.T) {
 	testContent := "this is some dummy content"
 	size := int64(len(testContent))
 
-	svc, err := importer.NewApiUploadService(url, 1024)
-	assert.Nil(t, err)
+	client := uploadservice.New(url)
+
+	svc := importer.NewUploadService(client, 1024)
 	assert.NotNil(t, svc)
 
 	f := &importer.File{
@@ -29,7 +31,7 @@ func TestNoOpUploadService(t *testing.T) {
 		SizeInBytes: &size,
 	}
 
-	err = svc.Send(context.TODO(), f, "title", "collectionId", "licence", "licenceUrl")
+	err := svc.SendFile(context.TODO(), f, "title", "collectionId", "licence", "licenceUrl")
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(svc.Uploads))
 }

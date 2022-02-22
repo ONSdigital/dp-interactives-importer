@@ -59,7 +59,6 @@ func NewInteractivesImporterComponent() *Component {
 		DoGetHealthCheckFunc:   DoGetHealthcheckOk,
 		DoGetHealthClientFunc:  DoGetHealthClient,
 		DoGetKafkaConsumerFunc: DoGetConsumer(c),
-		DoGetKafkaProducerFunc: DoGetProducer(c),
 		DoGetS3ClientFunc:      DoGetS3Client(c),
 	}
 
@@ -74,12 +73,6 @@ func (c *Component) Close() {
 
 func (c *Component) Reset() {
 
-}
-
-func DoGetProducer(c *Component) func(context.Context, *config.Config) (kafka.IProducer, error) {
-	return func(_ context.Context, _ *config.Config) (kafka.IProducer, error) {
-		return c.KafkaProducer, nil
-	}
 }
 
 func DoGetConsumer(c *Component) func(context.Context, *config.Config) (kafka.IConsumerGroup, error) {

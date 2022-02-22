@@ -2,6 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
+	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
@@ -14,20 +20,20 @@ import (
 )
 
 type ExternalServiceList struct {
-	HealthCheck   bool
-	KafkaProducer bool
-	KafkaConsumer bool
-	S3Client      bool
-	Init          Initialiser
+	HealthCheck          bool
+	KafkaConsumer        bool
+	S3Client             bool
+	UploadServiceBackend bool
+	Init                 Initialiser
 }
 
 func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
-		HealthCheck:   false,
-		KafkaProducer: false,
-		KafkaConsumer: false,
-		S3Client:      false,
-		Init:          initialiser,
+		HealthCheck:          false,
+		KafkaConsumer:        false,
+		S3Client:             false,
+		UploadServiceBackend: false,
+		Init:                 initialiser,
 	}
 }
 
@@ -37,16 +43,6 @@ type Init struct{}
 func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := e.Init.DoGetHTTPServer(bindAddr, router)
 	return s
-}
-
-// GetKafkaProducer returns a kafka producer
-func (e *ExternalServiceList) GetKafkaProducer(ctx context.Context, cfg *config.Config) (producer kafka.IProducer, err error) {
-	producer, err = e.Init.DoGetKafkaProducer(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-	e.KafkaProducer = true
-	return producer, nil
 }
 
 // GetKafkaConsumer creates a Kafka consumer and sets the consumer flag to true
@@ -67,6 +63,16 @@ func (e *ExternalServiceList) GetS3Client(ctx context.Context, cfg *config.Confi
 	}
 	e.S3Client = true
 	return s3, nil
+}
+
+// DoGetUploadServiceBackend creates upload service backend and sets the UploadServiceBackend flag to true
+func (e *ExternalServiceList) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+	client, err := e.Init.DoGetUploadServiceBackend(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	e.UploadServiceBackend = true
+	return client, nil
 }
 
 // GetHealthClient returns a healthclient for the provided URL
@@ -91,24 +97,6 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
 	return s
-}
-
-// DoGetKafkaProducer creates a kafka producer for the provided broker addresses, topic and envMax values in config
-func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
-	pConfig := &kafka.ProducerConfig{
-		KafkaVersion:    &cfg.KafkaVersion,
-		MaxMessageBytes: &cfg.KafkaMaxBytes,
-	}
-	if cfg.KafkaSecProtocol == "TLS" {
-		pConfig.SecurityConfig = kafka.GetSecurityConfig(
-			cfg.KafkaSecCACerts,
-			cfg.KafkaSecClientCert,
-			cfg.KafkaSecClientKey,
-			cfg.KafkaSecSkipVerify,
-		)
-	}
-	producerChannels := kafka.CreateProducerChannels()
-	return kafka.NewProducer(ctx, cfg.Brokers, cfg.InteractivesWriteTopic, producerChannels, pConfig)
 }
 
 // DoGetKafkaConsumer returns a Kafka Consumer group
@@ -142,11 +130,41 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafk
 
 // DoGetS3Uploaded returns a S3Client
 func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error) {
-	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.UploadBucketName)
+	s, err := session.NewSession(&aws.Config{
+		Endpoint:         aws.String(cfg.AwsRegion),
+		Region:           aws.String("eu-west-1"),
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials("test", "test", ""),
+	})
+
 	if err != nil {
-		return nil, err
+		fmt.Println("S3 ERROR: " + err.Error())
 	}
-	return s3Client, nil
+
+	return dps3.NewClientWithSession(cfg.DownloadBucketName, s), nil
+
+	//s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.DownloadBucketName)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return s3Client, nil
+}
+
+// DoGetUploadServiceBackend returns an upload service backend
+func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+	//uploadSvcBackend := uploadservice.New(cfg.ApiRouterUrl)
+
+	//mocked - i got working e2e locally but had to make significant code changes in dp-upload-service
+	uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
+		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+			return nil
+		},
+		UploadFunc: func(_ context.Context, _ string, _ uploadservice.UploadJob) error {
+			return nil
+		},
+	}
+
+	return uploadSvcBackend, nil
 }
 
 // DoGetHealthClient creates a new Health Client for the provided name and url

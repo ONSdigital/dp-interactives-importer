@@ -3,12 +3,12 @@ package importer
 import (
 	"context"
 	"fmt"
-	openapi "github.com/ONSdigital/dp-interactives-importer/internal/client/dp-upload-service/go"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	"os"
 )
 
 const (
-	defaultChunkSize    = 1024
+	defaultChunkSize    = 5 << (10 * 2) //https://github.com/ONSdigital/dp-s3#chunk-size
 	uploadRootDirectory = "interactives"
 )
 
@@ -17,47 +17,45 @@ type Upload struct {
 	TotalChunks, TotalSize                             int64
 }
 
-func NewApiUploadService(apiUrl string, chunkSize int64) (*ApiUploadService, error) {
-	cfg := openapi.NewConfiguration()
-	cfg.Servers = openapi.ServerConfigurations{
-		{URL: apiUrl},
-	}
-
+func NewUploadService(backend UploadServiceBackend, chunkSize int64) *UploadService {
 	c := chunkSize
 	if c == 0 {
 		c = defaultChunkSize
 	}
 
-	return &ApiUploadService{
+	return &UploadService{
 		chunkSize: c,
-		client:    openapi.NewAPIClient(cfg),
-	}, nil
+		backend:   backend,
+	}
 }
 
 //todo handling retries?
 //todo handle duplicates/replace? - path name convention
 
-type ApiUploadService struct {
-	client    *openapi.APIClient
+type UploadService struct {
+	backend   UploadServiceBackend
 	chunkSize int64
 	Uploads   []Upload
 }
 
-func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionId, licence, licenceUrl string) error {
-	uploadFileFunc := func(currentChunk, totalChunks, totalSize int, mimetype string, tmpFile *os.File) error {
-		req := s.client.UploadFileAndProvideMetadataApi.V1UploadPost(ctx)
-		req.Title(title)
-		req.File(tmpFile)
-		req.CollectionId(collectionId)
-		req.Licence(licence)
-		req.LicenceUrl(licenceUrl)
-		req.IsPublishable(true) //todo isPublishable==true - assumes all files are publishable - confirm what this means (missing from swagger right now)
-		req.ResumableFilename(getUploadFilename(f.Name, collectionId))
-		req.ResumableChunkNumber(int32(currentChunk))
-		req.ResumableTotalChunks(int32(totalChunks))
-		req.ResumableTotalSize(int32(totalSize))
-		req.ResumableType(mimetype)
-		_, err := s.client.UploadFileAndProvideMetadataApi.V1UploadPostExecute(req)
+func (s *UploadService) SendFile(ctx context.Context, f *File, title, collectionId, licence, licenceUrl string) error {
+	filename := getUploadFilename(f.Name, collectionId, 1)
+	uploadFileFunc := func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
+		req := uploadservice.UploadJob{
+			ResumableFilename:    filename,
+			IsPublishable:        true, //todo isPublishable==true - assumes all files are publishable - confirm what this means (missing from swagger right now)
+			CollectionId:         collectionId,
+			Title:                title,
+			ResumableTotalSize:   totalSize,
+			ResumableType:        mimetype,
+			Licence:              licence,
+			LicenceUrl:           licenceUrl,
+			ResumableChunkNumber: currentChunk,
+			ResumableTotalChunks: totalChunks,
+			File:                 tmpFile,
+		}
+
+		err := s.backend.Upload(ctx, "", req)
 		if err != nil {
 			return err
 		}
@@ -73,7 +71,7 @@ func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionI
 	s.Uploads = append(s.Uploads, Upload{
 		Title:        title,
 		CollectionId: collectionId,
-		Filename:     f.Name,
+		Filename:     filename,
 		Licence:      licence,
 		LicenceUrl:   licenceUrl,
 		TotalChunks:  totalChunks,
@@ -83,6 +81,7 @@ func (s *ApiUploadService) Send(ctx context.Context, f *File, title, collectionI
 	return nil
 }
 
-func getUploadFilename(filename, collectionId string) string {
-	return fmt.Sprintf("/%s/%s/%s", uploadRootDirectory, collectionId, filename)
+//no leading slash: https://github.com/ONSdigital/dp-upload-service/blob/ecc6062e6fe5856385b5fafbe1105606c1a958ff/api/upload.go#L25
+func getUploadFilename(filename, collectionId string, version int) string {
+	return fmt.Sprintf("%s/%s/version-%d/%s", uploadRootDirectory, collectionId, version, filename)
 }

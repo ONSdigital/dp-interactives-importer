@@ -21,7 +21,7 @@ func TestFile(t *testing.T) {
 	}
 
 	var content []byte
-	concat := func(currentChunk, totalChunks, totalSize int, mimetype string, tmpFile *os.File) error {
+	concat := func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
 		tmpFileContent, err := ioutil.ReadFile(tmpFile.Name())
 		if err != nil {
 			return err

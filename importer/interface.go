@@ -3,22 +3,23 @@ package importer
 import (
 	"context"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	s3client "github.com/ONSdigital/dp-s3"
 	"io"
 )
 
-//go:generate moq -out mock/s3.go -pkg mock . S3Interface
-//go:generate moq -out mock/upload_service.go -pkg mock . UploadService
 //go:generate moq -out mocks/s3.go -pkg mocks_importer . S3Interface
+//go:generate moq -out mocks/upload_service_backend.go -pkg mocks_importer . UploadServiceBackend
 
 type S3Interface interface {
-	GetFromS3URL(rawURL string, style s3client.URLStyle) (io.ReadCloser, *int64, error)
+	Get(key string) (io.ReadCloser, *int64, error)
 	//todo drop below
 	UploadPart(ctx context.Context, req *s3client.UploadPartRequest, payload []byte) error
 	CheckPartUploaded(ctx context.Context, req *s3client.UploadPartRequest) (bool, error)
 	Checker(ctx context.Context, state *health.CheckState) error
 }
 
-type UploadService interface {
-	Send(file *File, title, collectionId, filename, licence, licenceUrl string) error
+type UploadServiceBackend interface {
+	Upload(ctx context.Context, serviceToken string, job uploadservice.UploadJob) error
+	Checker(ctx context.Context, state *health.CheckState) error
 }
