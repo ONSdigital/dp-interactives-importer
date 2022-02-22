@@ -14,7 +14,45 @@ var (
 	doNothing = func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error { return nil }
 )
 
+func getConcatFunc(content *[]byte) func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
+	return func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
+		tmpFileContent, e := ioutil.ReadFile(tmpFile.Name())
+		if e != nil {
+			return e
+		}
+		*content = append(*content, tmpFileContent...)
+		return nil
+	}
+}
+
 func TestFile(t *testing.T) {
+
+	Convey("Given an empty file with an valid extension", t, func() {
+		var zero int64
+		f := &importer.File{
+			Name:        "testing.css",
+			ReadCloser:  io.NopCloser(strings.NewReader("")),
+			SizeInBytes: &zero,
+		}
+
+		Convey("When split and concatenate response into memory", func() {
+			var content []byte
+			totalChunks, err := f.SplitAndClose(zero+1024, getConcatFunc(&content))
+
+			Convey("Then there should be no error returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("And the content should be empty with no chunks processed", func() {
+				So(string(content), ShouldBeEmpty)
+				So(totalChunks, ShouldBeZeroValue)
+			})
+
+			Convey("And the file is closed", func() {
+				So(f.Closed, ShouldBeTrue)
+			})
+		})
+	})
 
 	testContent := "this is some dummy content"
 	size := int64(len(testContent))
@@ -48,24 +86,15 @@ func TestFile(t *testing.T) {
 			SizeInBytes: &size,
 		}
 
-		var content []byte
-		concat := func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
-			tmpFileContent, e := ioutil.ReadFile(tmpFile.Name())
-			if e != nil {
-				return e
-			}
-			content = append(content, tmpFileContent...)
-			return nil
-		}
-
 		Convey("When split into 4 chunks", func() {
-			totalChunks, err := f.SplitAndClose(size/4, concat)
+			var content []byte
+			totalChunks, err := f.SplitAndClose(size/4, getConcatFunc(&content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
 			})
 
-			Convey("And the content and total size should match with a total of 5 chunks processed", func() {
+			Convey("And the content should match with a total of 5 chunks processed", func() {
 				So(string(content), ShouldEqual, testContent)
 				So(totalChunks, ShouldEqual, 5)
 			})
@@ -76,13 +105,14 @@ func TestFile(t *testing.T) {
 		})
 
 		Convey("When processed in full with a bigger chunk size", func() {
-			totalChunks, err := f.SplitAndClose(size+1024, concat)
+			var content []byte
+			totalChunks, err := f.SplitAndClose(size+1024, getConcatFunc(&content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
 			})
 
-			Convey("And the content and total size should match with one chunk processed", func() {
+			Convey("And the content should match with 1 chunk processed", func() {
 				So(string(content), ShouldEqual, testContent)
 				So(totalChunks, ShouldEqual, 1)
 			})

@@ -7,8 +7,9 @@ import (
 
 // VisualisationUploadedHandler ...
 type VisualisationUploadedHandler struct {
-	S3            S3Interface
-	UploadService *UploadService
+	S3UploadBucket string
+	S3             S3Interface
+	UploadService  *UploadService
 }
 
 func (h *VisualisationUploadedHandler) Handle(ctx context.Context, event *VisualisationUploaded) error {

@@ -20,8 +20,8 @@ import (
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^these events are consumed:$`, c.theseEventsAreConsumed)
-	ctx.Step(`^"([^"]*)" interactives should be uploaded to s3 successfully$`, c.theseInteractivesAreUploadedToS3)
-	ctx.Step(`^a message for "([^"]*)" with "([^"]*)" is produced$`, c.aMessageForWithIsProduced)
+	ctx.Step(`^"([^"]*)" interactives should be downloaded from s3 successfully$`, c.theseInteractivesAreDownloadedFromS3)
+	ctx.Step(`^"([^"]*)" interactives should be uploaded via the upload service$`, c.interactivesShouldBeUploadedViaTheUploadService)
 }
 
 func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
@@ -57,25 +57,6 @@ func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
 	return nil
 }
 
-func (c *Component) theseInteractivesAreUploadedToS3(count int) error {
-	assert.Equal(&c.ErrorFeature, count, len(c.S3Client.UploadPartCalls()))
-	return c.ErrorFeature.StepError()
-}
-
-func (c *Component) aMessageForWithIsProduced(id, path string) error {
-	message := <-c.KafkaProducer.Channels().Output
-
-	var unmarshalledMessage importer.VisualisationUploaded
-	err := schema.VisualisationUploadedEvent.Unmarshal(message, &unmarshalledMessage)
-	if err != nil {
-		return err
-	}
-
-	assert.Equal(&c.ErrorFeature, id, unmarshalledMessage.ID)
-	assert.Equal(&c.ErrorFeature, path, unmarshalledMessage.Path)
-	return c.ErrorFeature.StepError()
-}
-
 func convertToEvents(table *godog.Table) ([]*importer.VisualisationUploaded, error) {
 	assist := assistdog.NewDefault()
 	events, err := assist.CreateSlice(&importer.VisualisationUploaded{}, table)
@@ -99,4 +80,14 @@ func sendToConsumer(kafka kafka.IConsumerGroup, e *importer.VisualisationUploade
 
 	kafka.Channels().Upstream <- kafkatest.NewMessage(bytes, 0)
 	return nil
+}
+
+func (c *Component) theseInteractivesAreDownloadedFromS3(count int) error {
+	assert.Equal(&c.ErrorFeature, count, len(c.S3Client.GetCalls()))
+	return c.ErrorFeature.StepError()
+}
+
+func (c *Component) interactivesShouldBeUploadedViaTheUploadService(count int) error {
+	assert.Equal(&c.ErrorFeature, count, len(c.UploadServiceBackend.UploadCalls()))
+	return c.ErrorFeature.StepError()
 }

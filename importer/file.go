@@ -21,6 +21,9 @@ type File struct {
 }
 
 func (f *File) Stat(chunkSize int64) (totalExpectedChunks, totalSize int32) {
+	if *f.SizeInBytes == 0 {
+		return 0, 0
+	}
 	return int32(math.Ceil(float64(*f.SizeInBytes / chunkSize))), int32(*f.SizeInBytes)
 }
 

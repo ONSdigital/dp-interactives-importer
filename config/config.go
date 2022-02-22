@@ -38,11 +38,11 @@ func Get() (*Config, error) {
 		BindAddr:                   "localhost:27400",
 		ApiRouterUrl:               "http://localhost:25100", //todo this is dp-upload-service port
 		AwsRegion:                  "http://localhost:4566",
-		DownloadBucketName:         "testing",
+		DownloadBucketName:         "dp-interactives-file-uploads",
 		Brokers:                    []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,
-		InteractivesReadTopic:      "dp-interactives-read-topic",
+		InteractivesReadTopic:      "interactives-import",
 		KafkaConsumerWorkers:       1,
 		InteractivesGroup:          "dp-interactives-importer",
 		GracefulShutdownTimeout:    5 * time.Second,

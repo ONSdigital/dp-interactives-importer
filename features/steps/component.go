@@ -2,8 +2,12 @@ package steps
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	component_test "github.com/ONSdigital/dp-component-test"
@@ -15,17 +19,16 @@ import (
 	mocks_service "github.com/ONSdigital/dp-interactives-importer/service/mocks"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	s3client "github.com/ONSdigital/dp-s3"
 )
 
 type Component struct {
-	ErrorFeature  component_test.ErrorFeature
-	serviceList   *service.ExternalServiceList
-	KafkaConsumer kafka.IConsumerGroup
-	KafkaProducer kafka.IProducer
-	S3Client      *mocks_importer.S3InterfaceMock
-	killChan      chan os.Signal
-	errorChan     chan error
+	ErrorFeature         component_test.ErrorFeature
+	serviceList          *service.ExternalServiceList
+	KafkaConsumer        kafka.IConsumerGroup
+	S3Client             *mocks_importer.S3InterfaceMock
+	UploadServiceBackend *mocks_importer.UploadServiceBackendMock
+	killChan             chan os.Signal
+	errorChan            chan error
 }
 
 func NewInteractivesImporterComponent() *Component {
@@ -36,30 +39,31 @@ func NewInteractivesImporterComponent() *Component {
 	consumer := kafkatest.NewMessageConsumer(false)
 	consumer.CheckerFunc = funcCheck
 	c.KafkaConsumer = consumer
-	channels := &kafka.ProducerChannels{
-		Output: make(chan []byte),
-	}
-	c.KafkaProducer = &kafkatest.IProducerMock{
-		ChannelsFunc: func() *kafka.ProducerChannels {
-			return channels
-		},
-		CloseFunc:   funcClose,
-		CheckerFunc: funcCheck,
-	}
 	//s3
 	c.S3Client = &mocks_importer.S3InterfaceMock{
 		CheckerFunc: funcCheck,
-		UploadPartFunc: func(_ context.Context, _ *s3client.UploadPartRequest, _ []byte) error {
+		GetFunc: func(key string) (io.ReadCloser, *int64, error) {
+			content := "non-empty-string"
+			size := int64(len(content))
+			return ioutil.NopCloser(strings.NewReader(content)), &size, nil
+		},
+	}
+	c.UploadServiceBackend = &mocks_importer.UploadServiceBackendMock{
+		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+			return nil
+		},
+		UploadFunc: func(_ context.Context, _ string, _ uploadservice.UploadJob) error {
 			return nil
 		},
 	}
 
 	initMock := &mocks_service.InitialiserMock{
-		DoGetHTTPServerFunc:    DoGetHTTPServerOk,
-		DoGetHealthCheckFunc:   DoGetHealthcheckOk,
-		DoGetHealthClientFunc:  DoGetHealthClient,
-		DoGetKafkaConsumerFunc: DoGetConsumer(c),
-		DoGetS3ClientFunc:      DoGetS3Client(c),
+		DoGetHTTPServerFunc:           DoGetHTTPServerOk,
+		DoGetHealthCheckFunc:          DoGetHealthcheckOk,
+		DoGetHealthClientFunc:         DoGetHealthClient,
+		DoGetKafkaConsumerFunc:        DoGetConsumer(c),
+		DoGetS3ClientFunc:             DoGetS3Client(c),
+		DoGetUploadServiceBackendFunc: DoGetUploadServiceBackend(c),
 	}
 
 	c.serviceList = service.NewServiceList(initMock)
@@ -104,6 +108,12 @@ func DoGetHTTPServerOk(bindAddr string, router http.Handler) service.HTTPServer 
 		ListenAndServeFunc: func() error {
 			return nil
 		},
+	}
+}
+
+func DoGetUploadServiceBackend(c *Component) func(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+	return func(_ context.Context, _ *config.Config) (importer.UploadServiceBackend, error) {
+		return c.UploadServiceBackend, nil
 	}
 }
 
