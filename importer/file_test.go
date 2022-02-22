@@ -27,13 +27,12 @@ func TestFile(t *testing.T) {
 		}
 
 		Convey("When split into 4 chunks", func() {
-			totalChunks, totalSize, err := f.SplitAndClose(size, doNothing)
+			totalChunks, err := f.SplitAndClose(size, doNothing)
 
 			Convey("Then there should an error returned with the filename", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldContainSubstring, f.Name)
 				So(totalChunks, ShouldBeZeroValue)
-				So(totalSize, ShouldBeZeroValue)
 			})
 
 			Convey("And the file is closed", func() {
@@ -60,7 +59,7 @@ func TestFile(t *testing.T) {
 		}
 
 		Convey("When split into 4 chunks", func() {
-			totalChunks, totalSize, err := f.SplitAndClose(size/4, concat)
+			totalChunks, err := f.SplitAndClose(size/4, concat)
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
@@ -68,7 +67,6 @@ func TestFile(t *testing.T) {
 
 			Convey("And the content and total size should match with a total of 5 chunks processed", func() {
 				So(string(content), ShouldEqual, testContent)
-				So(totalSize, ShouldEqual, size)
 				So(totalChunks, ShouldEqual, 5)
 			})
 
@@ -78,7 +76,7 @@ func TestFile(t *testing.T) {
 		})
 
 		Convey("When processed in full with a bigger chunk size", func() {
-			totalChunks, totalSize, err := f.SplitAndClose(size+1024, concat)
+			totalChunks, err := f.SplitAndClose(size+1024, concat)
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
@@ -86,7 +84,6 @@ func TestFile(t *testing.T) {
 
 			Convey("And the content and total size should match with one chunk processed", func() {
 				So(string(content), ShouldEqual, testContent)
-				So(totalSize, ShouldEqual, size)
 				So(totalChunks, ShouldEqual, 1)
 			})
 

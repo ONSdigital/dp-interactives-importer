@@ -20,7 +20,11 @@ type File struct {
 	Closed      bool
 }
 
-func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks, totalSize int64, err error) {
+func (f *File) Stat(chunkSize int64) (totalExpectedChunks, totalSize int32) {
+	return int32(math.Ceil(float64(*f.SizeInBytes / chunkSize))), int32(*f.SizeInBytes)
+}
+
+func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks int64, err error) {
 	defer func(ReadCloser io.ReadCloser) {
 		e := ReadCloser.Close()
 		if e != nil {
@@ -36,12 +40,10 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 		return
 	}
 
-	currentChunk, totalExpectedChunks, totalSize := 0, math.Ceil(float64(totalSize/chunkSize)), *f.SizeInBytes
-	if totalExpectedChunks == 0 {
-		totalExpectedChunks = 1
-	}
+	totalSize, totalExpectedChunks := f.Stat(chunkSize)
 
 	r := bufio.NewReader(f.ReadCloser)
+	var currentChunk int32
 	for {
 		currentChunk++
 
@@ -65,7 +67,7 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 			return
 		}
 
-		if err = doFunc(int32(currentChunk), int32(totalExpectedChunks), int32(totalSize), mimetype, tmp); err != nil {
+		if err = doFunc(currentChunk, totalExpectedChunks, totalSize, mimetype, tmp); err != nil {
 			return
 		}
 

@@ -19,7 +19,7 @@ type Upload struct {
 
 func NewUploadService(backend UploadServiceBackend, chunkSize int64) *UploadService {
 	c := chunkSize
-	if c == 0 {
+	if c <= 0 {
 		c = defaultChunkSize
 	}
 
@@ -63,7 +63,7 @@ func (s *UploadService) SendFile(ctx context.Context, f *File, title, collection
 		return nil
 	}
 
-	totalChunks, totalSize, err := f.SplitAndClose(s.chunkSize, uploadFileFunc)
+	totalChunks, err := f.SplitAndClose(s.chunkSize, uploadFileFunc)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (s *UploadService) SendFile(ctx context.Context, f *File, title, collection
 		Licence:      licence,
 		LicenceUrl:   licenceUrl,
 		TotalChunks:  totalChunks,
-		TotalSize:    totalSize,
+		TotalSize:    *f.SizeInBytes,
 	})
 
 	return nil
