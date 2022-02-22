@@ -15,7 +15,6 @@ import (
 
 type ExternalServiceList struct {
 	HealthCheck   bool
-	KafkaProducer bool
 	KafkaConsumer bool
 	S3Client      bool
 	Init          Initialiser
@@ -24,7 +23,6 @@ type ExternalServiceList struct {
 func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
 		HealthCheck:   false,
-		KafkaProducer: false,
 		KafkaConsumer: false,
 		S3Client:      false,
 		Init:          initialiser,
@@ -37,16 +35,6 @@ type Init struct{}
 func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := e.Init.DoGetHTTPServer(bindAddr, router)
 	return s
-}
-
-// GetKafkaProducer returns a kafka producer
-func (e *ExternalServiceList) GetKafkaProducer(ctx context.Context, cfg *config.Config) (producer kafka.IProducer, err error) {
-	producer, err = e.Init.DoGetKafkaProducer(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-	e.KafkaProducer = true
-	return producer, nil
 }
 
 // GetKafkaConsumer creates a Kafka consumer and sets the consumer flag to true
@@ -93,24 +81,6 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 	return s
 }
 
-// DoGetKafkaProducer creates a kafka producer for the provided broker addresses, topic and envMax values in config
-func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config) (kafka.IProducer, error) {
-	pConfig := &kafka.ProducerConfig{
-		KafkaVersion:    &cfg.KafkaVersion,
-		MaxMessageBytes: &cfg.KafkaMaxBytes,
-	}
-	if cfg.KafkaSecProtocol == "TLS" {
-		pConfig.SecurityConfig = kafka.GetSecurityConfig(
-			cfg.KafkaSecCACerts,
-			cfg.KafkaSecClientCert,
-			cfg.KafkaSecClientKey,
-			cfg.KafkaSecSkipVerify,
-		)
-	}
-	producerChannels := kafka.CreateProducerChannels()
-	return kafka.NewProducer(ctx, cfg.Brokers, cfg.InteractivesWriteTopic, producerChannels, pConfig)
-}
-
 // DoGetKafkaConsumer returns a Kafka Consumer group
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
 	kafkaOffset := kafka.OffsetOldest
@@ -142,7 +112,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafk
 
 // DoGetS3Uploaded returns a S3Client
 func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error) {
-	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.UploadBucketName)
+	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.DownloadBucketName)
 	if err != nil {
 		return nil, err
 	}

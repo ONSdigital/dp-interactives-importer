@@ -22,7 +22,6 @@ type Component struct {
 	ErrorFeature  component_test.ErrorFeature
 	serviceList   *service.ExternalServiceList
 	KafkaConsumer kafka.IConsumerGroup
-	KafkaProducer kafka.IProducer
 	S3Client      *mocks_importer.S3InterfaceMock
 	killChan      chan os.Signal
 	errorChan     chan error
@@ -36,16 +35,6 @@ func NewInteractivesImporterComponent() *Component {
 	consumer := kafkatest.NewMessageConsumer(false)
 	consumer.CheckerFunc = funcCheck
 	c.KafkaConsumer = consumer
-	channels := &kafka.ProducerChannels{
-		Output: make(chan []byte),
-	}
-	c.KafkaProducer = &kafkatest.IProducerMock{
-		ChannelsFunc: func() *kafka.ProducerChannels {
-			return channels
-		},
-		CloseFunc:   funcClose,
-		CheckerFunc: funcCheck,
-	}
 	//s3
 	c.S3Client = &mocks_importer.S3InterfaceMock{
 		CheckerFunc: funcCheck,
@@ -59,7 +48,6 @@ func NewInteractivesImporterComponent() *Component {
 		DoGetHealthCheckFunc:   DoGetHealthcheckOk,
 		DoGetHealthClientFunc:  DoGetHealthClient,
 		DoGetKafkaConsumerFunc: DoGetConsumer(c),
-		DoGetKafkaProducerFunc: DoGetProducer(c),
 		DoGetS3ClientFunc:      DoGetS3Client(c),
 	}
 
@@ -74,12 +62,6 @@ func (c *Component) Close() {
 
 func (c *Component) Reset() {
 
-}
-
-func DoGetProducer(c *Component) func(context.Context, *config.Config) (kafka.IProducer, error) {
-	return func(_ context.Context, _ *config.Config) (kafka.IProducer, error) {
-		return c.KafkaProducer, nil
-	}
 }
 
 func DoGetConsumer(c *Component) func(context.Context, *config.Config) (kafka.IConsumerGroup, error) {

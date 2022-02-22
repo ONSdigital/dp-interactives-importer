@@ -2,10 +2,6 @@ package importer
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/ONSdigital/dp-interactives-importer/schema"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
 	s3client "github.com/ONSdigital/dp-s3"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -14,7 +10,6 @@ import (
 type VisualisationUploadedHandler struct {
 	S3UploadBucket string
 	S3Interface    S3Interface
-	Producer       kafka.IProducer
 }
 
 func (h *VisualisationUploadedHandler) Handle(ctx context.Context, event *VisualisationUploaded) error {
@@ -32,13 +27,6 @@ func (h *VisualisationUploadedHandler) Handle(ctx context.Context, event *Visual
 	if err != nil {
 		return err
 	}
-	// kafka - we assert on this message
-	msg := VisualisationUploaded{ID: event.ID, Path: fmt.Sprintf("s3://%s", event.Path)}
-	bytes, err := schema.VisualisationUploadedEvent.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	h.Producer.Channels().Output <- bytes
 	// todo end
 
 	return nil
