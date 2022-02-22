@@ -20,7 +20,6 @@ type Config struct {
 	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"             json:"-"`
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	InteractivesReadTopic      string        `envconfig:"INTERACTIVES_READ_TOPIC"`
-	InteractivesWriteTopic     string        `envconfig:"INTERACTIVES_WRITE_TOPIC"`
 	InteractivesGroup          string        `envconfig:"INTERACTIVES_GROUP"`
 	KafkaConsumerWorkers       int           `envconfig:"KAFKA_CONSUMER_WORKERS"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
@@ -43,8 +42,7 @@ func Get() (*Config, error) {
 		Brokers:                    []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,
-		InteractivesReadTopic:      "interactives-visualisations-api",
-		InteractivesWriteTopic:     "interactives-visualisations-importer",
+		InteractivesReadTopic:      "interactives-import",
 		KafkaConsumerWorkers:       1,
 		InteractivesGroup:          "dp-interactives-importer",
 		GracefulShutdownTimeout:    5 * time.Second,
