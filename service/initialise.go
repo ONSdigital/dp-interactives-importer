@@ -140,7 +140,7 @@ func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config
 	//mocked - i got working e2e locally but had to make significant code changes in dp-upload-service
 	uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
 		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-			return nil
+			return state.Update(healthcheck.StatusOK, "mocked upload service backend healthy", 0)
 		},
 		UploadFunc: func(_ context.Context, _ string, _ uploadservice.UploadJob) error {
 			return nil

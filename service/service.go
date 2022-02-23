@@ -135,12 +135,12 @@ func registerCheckers(ctx context.Context,
 
 	hasErrors := false
 
-	if err = hc.AddCheck("Published Kafka Consumer", consumer.Checker); err != nil {
+	if err = hc.AddCheck("Kafka consumer", consumer.Checker); err != nil {
 		hasErrors = true
-		log.Error(ctx, "error adding check for published kafka consumer", err, log.Data{"group": cfg.InteractivesGroup, "topic": cfg.InteractivesReadTopic})
+		log.Error(ctx, "error adding check for kafka consumer", err, log.Data{"group": cfg.InteractivesGroup, "topic": cfg.InteractivesReadTopic})
 	}
 
-	if err = hc.AddCheck("S3 checker", s3.Checker); err != nil {
+	if err = hc.AddCheck("S3 bucket", s3.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for s3", err)
 	}
