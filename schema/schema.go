@@ -4,16 +4,16 @@ import (
 	"github.com/ONSdigital/go-ns/avro"
 )
 
-var visualisationUploadedEvent = `{
+var interactivesUploadedEvent = `{
   "type": "record",
-  "name": "visualisation-uploaded",
+  "name": "interactives-uploaded",
   "fields": [
     {"name": "id", "type": "string"},
     {"name": "path", "type": "string"}
   ]
 }`
 
-// ImageUploadedEvent is the Avro schema for Image uploaded messages.
-var VisualisationUploadedEvent = &avro.Schema{
-	Definition: visualisationUploadedEvent,
+// InteractivesUploadedEvent is the Avro schema for interactives uploaded messages.
+var InteractivesUploadedEvent = &avro.Schema{
+	Definition: interactivesUploadedEvent,
 }

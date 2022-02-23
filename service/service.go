@@ -49,7 +49,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	uploadService := importer.NewUploadService(uploadServiceBackend, 0) //todo define chunk size
 
 	// Event Handler for Kafka Consumer
-	importer.Consume(ctx, consumer, &importer.VisualisationUploadedHandler{
+	importer.Consume(ctx, consumer, &importer.InteractivesUploadedHandler{
 		S3:            s3Client,
 		UploadService: uploadService,
 	}, cfg.KafkaConsumerWorkers)

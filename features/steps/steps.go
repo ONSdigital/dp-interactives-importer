@@ -57,13 +57,13 @@ func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
 	return nil
 }
 
-func convertToEvents(table *godog.Table) ([]*importer.VisualisationUploaded, error) {
+func convertToEvents(table *godog.Table) ([]*importer.InteractivesUploaded, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&importer.VisualisationUploaded{}, table)
+	events, err := assist.CreateSlice(&importer.InteractivesUploaded{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*importer.VisualisationUploaded), nil
+	return events.([]*importer.InteractivesUploaded), nil
 }
 
 func registerInterrupt() chan os.Signal {
@@ -72,8 +72,8 @@ func registerInterrupt() chan os.Signal {
 	return signals
 }
 
-func sendToConsumer(kafka kafka.IConsumerGroup, e *importer.VisualisationUploaded) error {
-	bytes, err := schema.VisualisationUploadedEvent.Marshal(e)
+func sendToConsumer(kafka kafka.IConsumerGroup, e *importer.InteractivesUploaded) error {
+	bytes, err := schema.InteractivesUploadedEvent.Marshal(e)
 	if err != nil {
 		return err
 	}

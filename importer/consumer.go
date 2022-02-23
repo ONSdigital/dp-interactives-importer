@@ -12,7 +12,7 @@ import (
 
 // Handler represents a handler for processing a single event.
 type Handler interface {
-	Handle(ctx context.Context, VisualisationUploaded *VisualisationUploaded) error
+	Handle(context.Context, *InteractivesUploaded) error
 }
 
 // Consume converts messages to event instances, and pass the event to the provided handler.
@@ -77,8 +77,8 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler)
 }
 
 // unmarshal converts a event instance to []byte.
-func unmarshal(message kafka.Message) (*VisualisationUploaded, error) {
-	var event VisualisationUploaded
-	err := schema.VisualisationUploadedEvent.Unmarshal(message.GetData(), &event)
+func unmarshal(message kafka.Message) (*InteractivesUploaded, error) {
+	var event InteractivesUploaded
+	err := schema.InteractivesUploadedEvent.Unmarshal(message.GetData(), &event)
 	return &event, err
 }

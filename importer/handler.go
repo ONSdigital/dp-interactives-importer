@@ -5,14 +5,12 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-// VisualisationUploadedHandler ...
-type VisualisationUploadedHandler struct {
-	S3UploadBucket string
-	S3             S3Interface
-	UploadService  *UploadService
+type InteractivesUploadedHandler struct {
+	S3            S3Interface
+	UploadService *UploadService
 }
 
-func (h *VisualisationUploadedHandler) Handle(ctx context.Context, event *VisualisationUploaded) error {
+func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *InteractivesUploaded) error {
 	logData := log.Data{"message_id": event.ID}
 	log.Info(ctx, "event handler", logData)
 
@@ -30,7 +28,7 @@ func (h *VisualisationUploadedHandler) Handle(ctx context.Context, event *Visual
 
 	// Parse/process
 
-	// Upload visualisations
+	// Upload each file in zip
 	err = h.UploadService.SendFile(ctx, file, "title", "collectionId", "licence", "licenceUrl")
 	if err != nil {
 		return err

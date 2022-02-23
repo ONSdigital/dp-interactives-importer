@@ -40,15 +40,15 @@ func main() {
 
 	//https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
 	//https://bucket-name.s3.Region.amazonaws.com/key-name
-	event1 := importer.VisualisationUploaded{Path: "ovpn_configs.zip"}
+	event1 := importer.InteractivesUploaded{Path: "ovpn_configs.zip"}
 	sendEvent(producer, event1)
 
 	time.Sleep(5 * time.Second)
 	producer.Close(context.TODO())
 }
 
-func sendEvent(producer *kafka.Producer, v importer.VisualisationUploaded) {
-	bytes, err := schema.VisualisationUploadedEvent.Marshal(v)
+func sendEvent(producer *kafka.Producer, v importer.InteractivesUploaded) {
+	bytes, err := schema.InteractivesUploadedEvent.Marshal(v)
 	if err != nil {
 		panic(err)
 	}

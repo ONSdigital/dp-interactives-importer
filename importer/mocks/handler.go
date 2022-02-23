@@ -19,7 +19,7 @@ var _ importer.Handler = &HandlerMock{}
 //
 // 		// make and configure a mocked importer.Handler
 // 		mockedHandler := &HandlerMock{
-// 			HandleFunc: func(ctx context.Context, VisualisationUploaded *importer.VisualisationUploaded) error {
+// 			HandleFunc: func(contextMoqParam context.Context, interactivesUploaded *importer.InteractivesUploaded) error {
 // 				panic("mock out the Handle method")
 // 			},
 // 		}
@@ -30,49 +30,49 @@ var _ importer.Handler = &HandlerMock{}
 // 	}
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, VisualisationUploaded *importer.VisualisationUploaded) error
+	HandleFunc func(contextMoqParam context.Context, interactivesUploaded *importer.InteractivesUploaded) error
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Handle holds details about calls to the Handle method.
 		Handle []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// VisualisationUploaded is the VisualisationUploaded argument value.
-			VisualisationUploaded *importer.VisualisationUploaded
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+			// InteractivesUploaded is the interactivesUploaded argument value.
+			InteractivesUploaded *importer.InteractivesUploaded
 		}
 	}
 	lockHandle sync.RWMutex
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, VisualisationUploaded *importer.VisualisationUploaded) error {
+func (mock *HandlerMock) Handle(contextMoqParam context.Context, interactivesUploaded *importer.InteractivesUploaded) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
-		Ctx                   context.Context
-		VisualisationUploaded *importer.VisualisationUploaded
+		ContextMoqParam      context.Context
+		InteractivesUploaded *importer.InteractivesUploaded
 	}{
-		Ctx:                   ctx,
-		VisualisationUploaded: VisualisationUploaded,
+		ContextMoqParam:      contextMoqParam,
+		InteractivesUploaded: interactivesUploaded,
 	}
 	mock.lockHandle.Lock()
 	mock.calls.Handle = append(mock.calls.Handle, callInfo)
 	mock.lockHandle.Unlock()
-	return mock.HandleFunc(ctx, VisualisationUploaded)
+	return mock.HandleFunc(contextMoqParam, interactivesUploaded)
 }
 
 // HandleCalls gets all the calls that were made to Handle.
 // Check the length with:
 //     len(mockedHandler.HandleCalls())
 func (mock *HandlerMock) HandleCalls() []struct {
-	Ctx                   context.Context
-	VisualisationUploaded *importer.VisualisationUploaded
+	ContextMoqParam      context.Context
+	InteractivesUploaded *importer.InteractivesUploaded
 } {
 	var calls []struct {
-		Ctx                   context.Context
-		VisualisationUploaded *importer.VisualisationUploaded
+		ContextMoqParam      context.Context
+		InteractivesUploaded *importer.InteractivesUploaded
 	}
 	mock.lockHandle.RLock()
 	calls = mock.calls.Handle

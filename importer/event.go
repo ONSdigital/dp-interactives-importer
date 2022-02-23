@@ -1,7 +1,7 @@
 package importer
 
-// VisualisationUploaded provides an avro structure for a visualisation uploaded event
-type VisualisationUploaded struct {
+// InteractivesUploaded provides an avro structure for a interactives uploaded event
+type InteractivesUploaded struct {
 	ID   string `avro:"id"`
 	Path string `avro:"path"`
 }
