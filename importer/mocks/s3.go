@@ -8,6 +8,7 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	s3client "github.com/ONSdigital/dp-s3"
+	"io"
 	"sync"
 )
 
@@ -27,6 +28,9 @@ var _ importer.S3Interface = &S3InterfaceMock{}
 // 			CheckerFunc: func(ctx context.Context, state *health.CheckState) error {
 // 				panic("mock out the Checker method")
 // 			},
+// 			GetFunc: func(key string) (io.ReadCloser, *int64, error) {
+// 				panic("mock out the Get method")
+// 			},
 // 			UploadPartFunc: func(ctx context.Context, req *s3client.UploadPartRequest, payload []byte) error {
 // 				panic("mock out the UploadPart method")
 // 			},
@@ -42,6 +46,9 @@ type S3InterfaceMock struct {
 
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(ctx context.Context, state *health.CheckState) error
+
+	// GetFunc mocks the Get method.
+	GetFunc func(key string) (io.ReadCloser, *int64, error)
 
 	// UploadPartFunc mocks the UploadPart method.
 	UploadPartFunc func(ctx context.Context, req *s3client.UploadPartRequest, payload []byte) error
@@ -62,6 +69,11 @@ type S3InterfaceMock struct {
 			// State is the state argument value.
 			State *health.CheckState
 		}
+		// Get holds details about calls to the Get method.
+		Get []struct {
+			// Key is the key argument value.
+			Key string
+		}
 		// UploadPart holds details about calls to the UploadPart method.
 		UploadPart []struct {
 			// Ctx is the ctx argument value.
@@ -74,6 +86,7 @@ type S3InterfaceMock struct {
 	}
 	lockCheckPartUploaded sync.RWMutex
 	lockChecker           sync.RWMutex
+	lockGet               sync.RWMutex
 	lockUploadPart        sync.RWMutex
 }
 
@@ -144,6 +157,37 @@ func (mock *S3InterfaceMock) CheckerCalls() []struct {
 	mock.lockChecker.RLock()
 	calls = mock.calls.Checker
 	mock.lockChecker.RUnlock()
+	return calls
+}
+
+// Get calls GetFunc.
+func (mock *S3InterfaceMock) Get(key string) (io.ReadCloser, *int64, error) {
+	if mock.GetFunc == nil {
+		panic("S3InterfaceMock.GetFunc: method is nil but S3Interface.Get was just called")
+	}
+	callInfo := struct {
+		Key string
+	}{
+		Key: key,
+	}
+	mock.lockGet.Lock()
+	mock.calls.Get = append(mock.calls.Get, callInfo)
+	mock.lockGet.Unlock()
+	return mock.GetFunc(key)
+}
+
+// GetCalls gets all the calls that were made to Get.
+// Check the length with:
+//     len(mockedS3Interface.GetCalls())
+func (mock *S3InterfaceMock) GetCalls() []struct {
+	Key string
+} {
+	var calls []struct {
+		Key string
+	}
+	mock.lockGet.RLock()
+	calls = mock.calls.Get
+	mock.lockGet.RUnlock()
 	return calls
 }
 

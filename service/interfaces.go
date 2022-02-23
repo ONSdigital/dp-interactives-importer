@@ -22,6 +22,7 @@ type Initialiser interface {
 	DoGetHealthClient(name, url string) *health.Client
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
 	DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error)
+	DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server

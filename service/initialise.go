@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
@@ -14,18 +16,20 @@ import (
 )
 
 type ExternalServiceList struct {
-	HealthCheck   bool
-	KafkaConsumer bool
-	S3Client      bool
-	Init          Initialiser
+	HealthCheck          bool
+	KafkaConsumer        bool
+	S3Client             bool
+	UploadServiceBackend bool
+	Init                 Initialiser
 }
 
 func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
-		HealthCheck:   false,
-		KafkaConsumer: false,
-		S3Client:      false,
-		Init:          initialiser,
+		HealthCheck:          false,
+		KafkaConsumer:        false,
+		S3Client:             false,
+		UploadServiceBackend: false,
+		Init:                 initialiser,
 	}
 }
 
@@ -55,6 +59,16 @@ func (e *ExternalServiceList) GetS3Client(ctx context.Context, cfg *config.Confi
 	}
 	e.S3Client = true
 	return s3, nil
+}
+
+// GetUploadServiceBackend creates upload service backend and sets the UploadServiceBackend flag to true
+func (e *ExternalServiceList) GetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+	client, err := e.Init.DoGetUploadServiceBackend(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	e.UploadServiceBackend = true
+	return client, nil
 }
 
 // GetHealthClient returns a healthclient for the provided URL
@@ -117,6 +131,23 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 		return nil, err
 	}
 	return s3Client, nil
+}
+
+// DoGetUploadServiceBackend returns an upload service backend
+func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+	//uploadSvcBackend := uploadservice.New(cfg.ApiRouterUrl)
+
+	//mocked - i got working e2e locally but had to make significant code changes in dp-upload-service
+	uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
+		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+			return nil
+		},
+		UploadFunc: func(_ context.Context, _ string, _ uploadservice.UploadJob) error {
+			return nil
+		},
+	}
+
+	return uploadSvcBackend, nil
 }
 
 // DoGetHealthClient creates a new Health Client for the provided name and url

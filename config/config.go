@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	ApiRouterUrl               string        `envconfig:"API_ROUTER_URL"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`
 	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
@@ -35,9 +36,10 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   "localhost:27400",
+		ApiRouterUrl:               "http://localhost:25100", //todo this is dp-upload-service port
 		AwsRegion:                  "eu-west-1",
 		DownloadBucketName:         "dp-interactives-file-uploads",
-		Brokers:                    []string{"localhost:9092", "localhost:9093", "localhost:9094"},
+		Brokers:                    []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,
 		InteractivesReadTopic:      "interactives-import",

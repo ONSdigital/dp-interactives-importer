@@ -35,10 +35,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	event1 := importer.VisualisationUploaded{Path: "1_path_to_a_interactive"}
+	//aws --endpoint-url=http://localhost:4566 s3 cp ~/Desktop/ovpn_configs.zip s3://testing/
+	//browser at to see ls -> http://localhost:4566/testing
+
+	//https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+	//https://bucket-name.s3.Region.amazonaws.com/key-name
+	event1 := importer.VisualisationUploaded{Path: "ovpn_configs.zip"}
 	sendEvent(producer, event1)
-	event2 := importer.VisualisationUploaded{Path: "2_path_to_a_interactive"}
-	sendEvent(producer, event2)
 
 	time.Sleep(5 * time.Second)
 	producer.Close(context.TODO())

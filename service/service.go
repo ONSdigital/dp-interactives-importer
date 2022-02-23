@@ -26,7 +26,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	r := mux.NewRouter()
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
-	// Get Kafka consumer
+	// Get Kafka
 	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
@@ -40,10 +40,18 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
+	// Get upload service backend
+	uploadServiceBackend, err := serviceList.GetUploadServiceBackend(ctx, cfg)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise upload service", err)
+		return nil, err
+	}
+	uploadService := importer.NewUploadService(uploadServiceBackend, 0) //todo define chunk size
+
 	// Event Handler for Kafka Consumer
 	importer.Consume(ctx, consumer, &importer.VisualisationUploadedHandler{
-		S3UploadBucket: cfg.DownloadBucketName,
-		S3Interface:    s3Client,
+		S3:            s3Client,
+		UploadService: uploadService,
 	}, cfg.KafkaConsumerWorkers)
 
 	//heathcheck - start
@@ -52,7 +60,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -71,7 +79,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		config:        cfg,
 		serviceList:   serviceList,
 		healthCheck:   nil,
-		kafkaConsumer: nil,
+		kafkaConsumer: consumer,
 	}, nil
 }
 
@@ -122,7 +130,8 @@ func registerCheckers(ctx context.Context,
 	cfg *config.Config,
 	hc HealthChecker,
 	consumer kafka.IConsumerGroup,
-	s3 importer.S3Interface) (err error) {
+	s3 importer.S3Interface,
+	uploadServiceBackend importer.UploadServiceBackend) (err error) {
 
 	hasErrors := false
 
@@ -134,6 +143,11 @@ func registerCheckers(ctx context.Context,
 	if err = hc.AddCheck("S3 checker", s3.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for s3", err)
+	}
+
+	if err = hc.AddCheck("Upload service backend", uploadServiceBackend.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for upload service", err)
 	}
 
 	if hasErrors {
