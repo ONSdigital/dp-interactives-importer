@@ -36,7 +36,7 @@ func TestUploadService(t *testing.T) {
 		f := &importer.File{
 			Name:        "testing.css",
 			ReadCloser:  ioutil.NopCloser(strings.NewReader(testContent)),
-			SizeInBytes: &size,
+			SizeInBytes: size,
 		}
 
 		Convey("And a healthy upload service backend", func() {

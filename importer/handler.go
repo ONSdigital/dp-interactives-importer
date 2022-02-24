@@ -11,30 +11,38 @@ type InteractivesUploadedHandler struct {
 }
 
 func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *InteractivesUploaded) error {
-	logData := log.Data{"message_id": event.ID}
-	log.Info(ctx, "event handler", logData)
+	logData := log.Data{"message_id": event.ID, "path": event.Path}
 
 	// Download zip file from s3
 	//todo handle paths???? /my-dir/my-dir-again/file.css
-	readCloser, size, err := h.S3.Get(event.Path)
+	readCloser, zipSize, err := h.S3.Get(event.Path)
 	if err != nil {
 		return err
 	}
-	file := &File{
-		Name:        event.Path,
-		ReadCloser:  readCloser,
-		SizeInBytes: size,
-	}
+	logData["zip_size"] = zipSize
 
-	// Parse/process
+	// todo Sanity check - do we need to check for 0 size here?
+
+	// Open zip and validate contents
+	archive := &Archive{Context: ctx, ReadCloser: readCloser}
+	err = archive.OpenAndValidate()
+	if err != nil {
+		return err
+	}
+	defer archive.Close()
+	logData["num_files"] = len(archive.Files)
 
 	// Upload each file in zip
-	err = h.UploadService.SendFile(ctx, file, "title", "collectionId", "licence", "licenceUrl")
-	if err != nil {
-		return err
+	for _, f := range archive.Files {
+		err = h.UploadService.SendFile(ctx, f, "title", "collectionId", "licence", "licenceUrl")
+		if err != nil {
+			return err
+		}
 	}
 
 	// Respond to api  (kafka or rest ?)
+
+	log.Info(ctx, "successfully processed", logData)
 
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ONSdigital/dp-interactives-importer/features/steps"
+	steps_test "github.com/ONSdigital/dp-interactives-importer/features/steps"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
@@ -21,7 +21,7 @@ type ComponentTest struct {
 }
 
 func (c *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-	component := steps.NewInteractivesImporterComponent()
+	component := steps_test.NewInteractivesImporterComponent()
 
 	ctx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		component.Reset()

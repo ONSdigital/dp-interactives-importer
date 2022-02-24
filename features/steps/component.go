@@ -1,24 +1,22 @@
-package steps
+package steps_test
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
-
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	component_test "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
+	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
+	"github.com/ONSdigital/dp-interactives-importer/internal/test"
 	"github.com/ONSdigital/dp-interactives-importer/service"
 	mocks_service "github.com/ONSdigital/dp-interactives-importer/service/mocks"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	"io"
+	"net/http"
+	"os"
 )
 
 type Component struct {
@@ -35,19 +33,22 @@ func NewInteractivesImporterComponent() *Component {
 	c := &Component{
 		errorChan: make(chan error),
 	}
-	//kafka
+
 	consumer := kafkatest.NewMessageConsumer(false)
 	consumer.CheckerFunc = funcCheck
 	c.KafkaConsumer = consumer
-	//s3
+
 	c.S3Client = &mocks_importer.S3InterfaceMock{
 		CheckerFunc: funcCheck,
 		GetFunc: func(key string) (io.ReadCloser, *int64, error) {
-			content := "non-empty-string"
-			size := int64(len(content))
-			return ioutil.NopCloser(strings.NewReader(content)), &size, nil
+			archiveName, _ := test.CreateTestZip("root.css", "root.html", "root.js")
+			archive, _ := os.Open(archiveName)
+			stat, _ := archive.Stat()
+			size := stat.Size()
+			return archive, &size, nil
 		},
 	}
+
 	c.UploadServiceBackend = &mocks_importer.UploadServiceBackendMock{
 		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
 			return nil

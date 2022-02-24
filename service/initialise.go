@@ -4,6 +4,10 @@ import (
 	"context"
 	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
 	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
+	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
@@ -126,6 +130,22 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafk
 
 // DoGetS3Uploaded returns a S3Client
 func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error) {
+	if cfg.AwsEndpoint != "" {
+		//for local development only - set env var to initialise
+		s, err := session.NewSession(&aws.Config{
+			Endpoint:         aws.String(cfg.AwsEndpoint),
+			Region:           aws.String(cfg.AwsRegion),
+			S3ForcePathStyle: aws.Bool(true),
+			Credentials:      credentials.NewStaticCredentials("n/a", "n/a", ""),
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		return dps3.NewClientWithSession(cfg.DownloadBucketName, s), nil
+	}
+
 	s3Client, err := dps3.NewClient(cfg.AwsRegion, cfg.DownloadBucketName)
 	if err != nil {
 		return nil, err
@@ -142,7 +162,9 @@ func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config
 		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
 			return state.Update(healthcheck.StatusOK, "mocked upload service backend healthy", 0)
 		},
-		UploadFunc: func(_ context.Context, _ string, _ uploadservice.UploadJob) error {
+		UploadFunc: func(ctx context.Context, _ string, job uploadservice.UploadJob) error {
+			logData := log.Data{"job": job}
+			log.Info(ctx, "file uploaded", logData)
 			return nil
 		},
 	}

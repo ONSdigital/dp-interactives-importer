@@ -40,7 +40,8 @@ func main() {
 
 	//https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
 	//https://bucket-name.s3.Region.amazonaws.com/key-name
-	event1 := importer.InteractivesUploaded{Path: "ovpn_configs.zip"}
+
+	event1 := importer.InteractivesUploaded{Path: "single-interactive.zip"}
 	sendEvent(producer, event1)
 
 	time.Sleep(5 * time.Second)

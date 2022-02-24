@@ -2,48 +2,41 @@ package importer
 
 import (
 	"bufio"
-	"fmt"
+	"context"
+	"github.com/ONSdigital/log.go/v2/log"
 	"io"
-	"io/ioutil"
 	"math"
-	"mime"
 	"os"
-	"path/filepath"
+)
+
+const (
+	DefaultChunkSize = 5 << (10 * 2) //https://github.com/ONSdigital/dp-s3#chunk-size
 )
 
 type FileProcessor func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error
 
 type File struct {
-	Name        string
+	Context     context.Context
 	ReadCloser  io.ReadCloser
-	SizeInBytes *int64
+	Name        string
+	MimeType    string
+	SizeInBytes int64
 	Closed      bool
 }
 
-func (f *File) Stat(chunkSize int64) (totalExpectedChunks, totalSize int32) {
-	if *f.SizeInBytes == 0 {
-		return 0, 0
-	}
-	return int32(math.Ceil(float64(*f.SizeInBytes / chunkSize))), int32(*f.SizeInBytes)
-}
-
 func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks int64, err error) {
-	defer func(ReadCloser io.ReadCloser) {
-		e := ReadCloser.Close()
-		if e != nil {
-			err = e
-			return
+	defer func(r io.ReadCloser) {
+		if e := r.Close(); e != nil {
+			logData := log.Data{"error": e.Error(), "name": f.Name}
+			log.Warn(f.Context, "cannot close file", logData)
 		}
 		f.Closed = true
 	}(f.ReadCloser)
 
-	mimetype := mime.TypeByExtension(filepath.Ext(f.Name))
-	if mimetype == "" {
-		err = fmt.Errorf("invalid file extension cannot determine mime type: %s", f.Name)
-		return
+	var totalExpectedChunks, totalSize int32
+	if f.SizeInBytes > 0 {
+		totalExpectedChunks, totalSize = int32(math.Ceil(float64(f.SizeInBytes/chunkSize))), int32(f.SizeInBytes)
 	}
-
-	totalSize, totalExpectedChunks := f.Stat(chunkSize)
 
 	r := bufio.NewReader(f.ReadCloser)
 	var currentChunk int32
@@ -56,13 +49,17 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 			if err != nil && err != io.EOF {
 				return
 			}
-			err = nil //dont return io.EOF
-			break     //all done
+			if n == 0 {
+				//Note: zip files behave slightly differently to normal readers: https://github.com/golang/go/issues/32858
+				//      you get n>0 and the EOF error not 0 and EOF like others
+				err = nil //dont return io.EOF
+				break     //all done
+			}
 		}
 
 		//todo can we just send the []bytes instead?
 		var tmp *os.File
-		if tmp, err = ioutil.TempFile("", "chunk_*"); err != nil {
+		if tmp, err = os.CreateTemp("", "chunk_*"); err != nil {
 			return
 		}
 
@@ -70,7 +67,7 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 			return
 		}
 
-		if err = doFunc(currentChunk, totalExpectedChunks, totalSize, mimetype, tmp); err != nil {
+		if err = doFunc(currentChunk, totalExpectedChunks, totalSize, f.MimeType, tmp); err != nil {
 			return
 		}
 

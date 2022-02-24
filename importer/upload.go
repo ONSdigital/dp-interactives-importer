@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	defaultChunkSize    = 5 << (10 * 2) //https://github.com/ONSdigital/dp-s3#chunk-size
 	uploadRootDirectory = "interactives"
 )
 
@@ -20,7 +19,7 @@ type Upload struct {
 func NewUploadService(backend UploadServiceBackend, chunkSize int64) *UploadService {
 	c := chunkSize
 	if c <= 0 {
-		c = defaultChunkSize
+		c = DefaultChunkSize
 	}
 
 	return &UploadService{
@@ -75,7 +74,7 @@ func (s *UploadService) SendFile(ctx context.Context, f *File, title, collection
 		Licence:      licence,
 		LicenceUrl:   licenceUrl,
 		TotalChunks:  totalChunks,
-		TotalSize:    *f.SizeInBytes,
+		TotalSize:    f.SizeInBytes,
 	})
 
 	return nil

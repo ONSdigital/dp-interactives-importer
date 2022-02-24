@@ -9,6 +9,7 @@ import (
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	ApiRouterUrl               string        `envconfig:"API_ROUTER_URL"`
+	AwsEndpoint                string        `envconfig:"AWS_ENDPOINT"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`
 	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
