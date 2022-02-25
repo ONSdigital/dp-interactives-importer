@@ -18,6 +18,7 @@ func TestArchive(t *testing.T) {
 	Convey("Given an empty file", t, func() {
 		archive, err := os.CreateTemp("", "test-zip_*.zip")
 		So(err, ShouldBeNil)
+		defer os.Remove(archive.Name())
 		So(archive.Name(), ShouldEndWith, ".zip")
 		_, err = io.Copy(archive, strings.NewReader(""))
 		So(err, ShouldBeNil)
@@ -31,6 +32,7 @@ func TestArchive(t *testing.T) {
 
 	Convey("Given a valid zip file", t, func() {
 		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js")
+		defer os.Remove(archiveName)
 		So(err, ShouldBeNil)
 		So(archiveName, ShouldNotBeEmpty)
 

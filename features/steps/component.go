@@ -27,12 +27,16 @@ type Component struct {
 	UploadServiceBackend *mocks_importer.UploadServiceBackendMock
 	killChan             chan os.Signal
 	errorChan            chan error
+	testZipArchive       *os.File
 }
 
 func NewInteractivesImporterComponent() *Component {
 	c := &Component{
 		errorChan: make(chan error),
 	}
+
+	archiveName, _ := test.CreateTestZip("root.css", "root.html", "root.js")
+	c.testZipArchive, _ = os.Open(archiveName)
 
 	consumer := kafkatest.NewMessageConsumer(false)
 	consumer.CheckerFunc = funcCheck
@@ -41,11 +45,9 @@ func NewInteractivesImporterComponent() *Component {
 	c.S3Client = &mocks_importer.S3InterfaceMock{
 		CheckerFunc: funcCheck,
 		GetFunc: func(key string) (io.ReadCloser, *int64, error) {
-			archiveName, _ := test.CreateTestZip("root.css", "root.html", "root.js")
-			archive, _ := os.Open(archiveName)
-			stat, _ := archive.Stat()
+			stat, _ := c.testZipArchive.Stat()
 			size := stat.Size()
-			return archive, &size, nil
+			return c.testZipArchive, &size, nil
 		},
 	}
 
@@ -73,7 +75,7 @@ func NewInteractivesImporterComponent() *Component {
 }
 
 func (c *Component) Close() {
-
+	_ = os.Remove(c.testZipArchive.Name())
 }
 
 func (c *Component) Reset() {

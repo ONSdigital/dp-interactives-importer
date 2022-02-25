@@ -101,6 +101,7 @@ func TestFile(t *testing.T) {
 	Convey("Given an actual file", t, func() {
 		testContent := "this is some dummy content"
 		tmpFileName, size, err := test.CreateTempFile(testContent)
+		defer os.Remove(tmpFileName)
 		So(err, ShouldBeNil)
 		So(size, ShouldNotBeZeroValue)
 
@@ -135,6 +136,7 @@ func TestFile(t *testing.T) {
 	Convey("Given a file from within a zip", t, func() {
 		testContent := "test"
 		tmpZipName, err := test.CreateTestZip(testContent)
+		defer os.Remove(tmpZipName)
 		So(err, ShouldBeNil)
 
 		zipReader, err := zip.OpenReader(tmpZipName)

@@ -15,6 +15,7 @@ type Archive struct {
 	Context    context.Context
 	ReadCloser io.ReadCloser
 	Files      []*File
+	TmpRemoved bool
 }
 
 func (a *Archive) OpenAndValidate() error {
@@ -22,6 +23,13 @@ func (a *Archive) OpenAndValidate() error {
 	if err != nil {
 		return err
 	}
+	defer func(f *os.File) {
+		if e := os.Remove(f.Name()); e != nil {
+			logData := log.Data{"error": e.Error(), "name": f.Name()}
+			log.Warn(a.Context, "cannot remove tmp file", logData)
+		}
+	}(tmp)
+
 	if _, err = io.Copy(tmp, a.ReadCloser); err != nil {
 		return err
 	}
