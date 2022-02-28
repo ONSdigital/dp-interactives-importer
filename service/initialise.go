@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
 	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
-	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -155,19 +153,19 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
-	//uploadSvcBackend := uploadservice.New(cfg.ApiRouterUrl)
+	uploadSvcBackend := uploadservice.New(cfg.ApiRouterUrl)
 
 	//mocked - i got working e2e locally but had to make significant code changes in dp-upload-service
-	uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
-		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-			return state.Update(healthcheck.StatusOK, "mocked upload service backend healthy", 0)
-		},
-		UploadFunc: func(ctx context.Context, _ string, job uploadservice.UploadJob) error {
-			logData := log.Data{"job": job}
-			log.Info(ctx, "file uploaded", logData)
-			return nil
-		},
-	}
+	//uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
+	//	CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+	//		return state.Update(healthcheck.StatusOK, "mocked upload service backend healthy", 0)
+	//	},
+	//	UploadFunc: func(ctx context.Context, _ string, job uploadservice.UploadJob) error {
+	//		logData := log.Data{"job": job}
+	//		log.Info(ctx, "file uploaded", logData)
+	//		return nil
+	//	},
+	//}
 
 	return uploadSvcBackend, nil
 }

@@ -88,7 +88,7 @@ func (c *Client) Checker(ctx context.Context, check *health.CheckState) error {
 
 // Upload POST's form with file to be uploaded and metadata
 func (c *Client) Upload(ctx context.Context, serviceToken string, job UploadJob) error {
-	uri := fmt.Sprintf("%s/%s", c.url, "v1/upload")
+	uri := fmt.Sprintf("%s/%s", c.url, "upload-new")
 	logData := log.Data{"uri": uri}
 
 	resp, err := c.doPostForm(ctx, serviceToken, uri, job)

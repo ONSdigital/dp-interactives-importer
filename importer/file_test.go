@@ -12,8 +12,18 @@ import (
 	"testing"
 )
 
-func getConcatFunc(content *[]byte) func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
+func getConcatFunc(t *testing.T, content *[]byte) func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
 	return func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
+		if totalChunks <= 0 {
+			t.Errorf("cannot send <=0 total chunks: %d", totalChunks)
+		}
+		if currentChunk <= 0 {
+			t.Errorf("cannot send <=0 current chunk: %d", currentChunk)
+		}
+		if totalSize <= 0 {
+			t.Errorf("cannot send <=0 totalSize: %d", totalSize)
+		}
+
 		tmpFileContent, e := ioutil.ReadFile(tmpFile.Name())
 		if e != nil {
 			return e
@@ -34,7 +44,7 @@ func TestFile(t *testing.T) {
 
 		Convey("When split and concatenate response into memory", func() {
 			var content []byte
-			totalChunks, err := f.SplitAndClose(1024, getConcatFunc(&content))
+			totalChunks, err := f.SplitAndClose(1024, getConcatFunc(t, &content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
@@ -63,7 +73,7 @@ func TestFile(t *testing.T) {
 
 		Convey("When split into 4 chunks", func() {
 			var content []byte
-			totalChunks, err := f.SplitAndClose(size/4, getConcatFunc(&content))
+			totalChunks, err := f.SplitAndClose(size/4, getConcatFunc(t, &content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
@@ -81,7 +91,7 @@ func TestFile(t *testing.T) {
 
 		Convey("When processed in full with default chunk size", func() {
 			var content []byte
-			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(&content))
+			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(t, &content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
@@ -116,7 +126,7 @@ func TestFile(t *testing.T) {
 
 		Convey("When split with default chunk size", func() {
 			var content []byte
-			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(&content))
+			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(t, &content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)
@@ -155,7 +165,7 @@ func TestFile(t *testing.T) {
 
 		Convey("When split with default chunk size", func() {
 			var content []byte
-			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(&content))
+			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(t, &content))
 
 			Convey("Then there should be no error returned", func() {
 				So(err, ShouldBeNil)

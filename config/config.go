@@ -39,7 +39,7 @@ func Get() (*Config, error) {
 		BindAddr:                   "localhost:27400",
 		ApiRouterUrl:               "http://localhost:25100", //todo this is dp-upload-service port
 		AwsRegion:                  "eu-west-1",
-		DownloadBucketName:         "dp-interactives-file-uploads",
+		DownloadBucketName:         "testing",
 		Brokers:                    []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,

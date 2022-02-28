@@ -2,7 +2,9 @@ package importer_test
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
+	"embed"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	"github.com/ONSdigital/dp-interactives-importer/internal/test"
 	"io"
@@ -11,6 +13,11 @@ import (
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
+)
+
+var (
+	//go:embed test/*
+	zipFile embed.FS
 )
 
 func TestArchive(t *testing.T) {
@@ -48,5 +55,70 @@ func TestArchive(t *testing.T) {
 				So(len(a.Files), ShouldEqual, 3)
 			})
 		})
+	})
+}
+
+func TestMimeType(t *testing.T) {
+
+	Convey("Given a zip file with some interactives files", t, func() {
+
+		raw, err := zipFile.ReadFile("test/single-interactive.zip")
+		So(err, ShouldBeNil)
+
+		zipReader, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
+		So(err, ShouldBeNil)
+
+		Convey("Then each file should match expected mimetype", func() {
+
+			expectedMimeTypes := map[string]string{
+				"single-interactive/index.html":                              "text/html; charset=utf-8",
+				"single-interactive/config.json":                             "application/json",
+				"single-interactive/exports.csv":                             "text/csv; charset=utf-8",
+				"single-interactive/trade_exports.csv":                       "text/csv; charset=utf-8",
+				"single-interactive/css/chosen.css":                          "text/css; charset=utf-8",
+				"single-interactive/css/styles.css":                          "text/css; charset=utf-8",
+				"single-interactive/js/base.js":                              "application/javascript",
+				"single-interactive/js/chosen.jquery.js":                     "application/javascript",
+				"single-interactive/js/DataStructures.Tree.js":               "application/javascript",
+				"single-interactive/js/modernizr.custom.56904.js":            "application/javascript",
+				"single-interactive/fonts/glyphicons-halflings-regular.woff": "font/woff",
+			}
+
+			var count int
+			for _, f := range zipReader.File {
+				m, ok := expectedMimeTypes[f.Name]
+				if ok {
+					mimeType, err := importer.MimeType(f)
+					So(err, ShouldBeNil)
+					So(mimeType, ShouldEqual, m)
+					count++
+				}
+			}
+
+			//minus directories (js/css/font/root)
+			So(len(zipReader.File)-4, ShouldEqual, count)
+		})
+	})
+}
+
+func TestIsRegular(t *testing.T) {
+
+	Convey("Given a regular file", t, func() {
+		f := &zip.File{FileHeader: zip.FileHeader{Name: "regular"}}
+		b := importer.IsRegular(f)
+		So(b, ShouldBeTrue)
+	})
+
+	Convey("Given a hidden file", t, func() {
+		f := &zip.File{FileHeader: zip.FileHeader{Name: ".hidden"}}
+		b := importer.IsRegular(f)
+		So(b, ShouldBeFalse)
+	})
+
+	Convey("Given a file from a MacOS compressed zip file", t, func() {
+		//https://superuser.com/questions/104500/what-is-macosx-folder
+		f := &zip.File{FileHeader: zip.FileHeader{Name: "__MACOSX"}}
+		b := importer.IsRegular(f)
+		So(b, ShouldBeFalse)
 	})
 }

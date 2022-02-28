@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/h2non/filetype"
+	"github.com/pkg/errors"
 	"io"
 	"mime"
 	"os"
@@ -40,10 +42,9 @@ func (a *Archive) OpenAndValidate() error {
 	}
 
 	for _, f := range zipReader.File {
-		if f.Mode().IsRegular() {
-			extension := filepath.Ext(f.Name)
-			mimetype := mime.TypeByExtension(extension)
-			if mimetype == "" {
+		if IsRegular(f) {
+			mimetype, err := MimeType(f)
+			if err != nil {
 				return fmt.Errorf("cannot determine mime type: %s", f.Name)
 			}
 
@@ -58,6 +59,7 @@ func (a *Archive) OpenAndValidate() error {
 				Name:        f.Name,
 				ReadCloser:  rc,
 				SizeInBytes: size,
+				MimeType:    mimetype,
 			})
 		}
 	}
@@ -69,4 +71,27 @@ func (a *Archive) Close() {
 	if e := a.ReadCloser.Close(); e != nil {
 		log.Warn(a.Context, "cannot close zip file", log.Data{"error": e.Error()})
 	}
+}
+
+func IsRegular(f *zip.File) bool {
+	return f.Mode().IsRegular() && f.Name[0] != '.' && f.Name != "__MACOSX"
+}
+
+func MimeType(f *zip.File) (string, error) {
+	rc, err := f.Open()
+	if err != nil {
+		return "", err
+	}
+
+	extension := filepath.Ext(f.Name)
+	mimetype := mime.TypeByExtension(extension)
+	if mimetype == "" {
+		kind, _ := filetype.MatchReader(rc)
+		if kind == filetype.Unknown {
+			return "", errors.New("type unknown")
+		}
+		mimetype = kind.MIME.Value
+	}
+
+	return mimetype, rc.Close()
 }

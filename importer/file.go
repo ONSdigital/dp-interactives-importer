@@ -37,6 +37,9 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 	if f.SizeInBytes > 0 {
 		totalExpectedChunks, totalSize = int32(math.Ceil(float64(f.SizeInBytes/chunkSize))), int32(f.SizeInBytes)
 	}
+	if totalExpectedChunks == 0 {
+		totalExpectedChunks = 1
+	}
 
 	r := bufio.NewReader(f.ReadCloser)
 	var currentChunk int32

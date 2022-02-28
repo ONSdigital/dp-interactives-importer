@@ -17,6 +17,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 	//todo handle paths???? /my-dir/my-dir-again/file.css
 	readCloser, zipSize, err := h.S3.Get(event.Path)
 	if err != nil {
+		log.Error(ctx, "cannot get zip from s3", err, logData)
 		return err
 	}
 	logData["zip_size"] = zipSize
@@ -27,6 +28,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 	archive := &Archive{Context: ctx, ReadCloser: readCloser}
 	err = archive.OpenAndValidate()
 	if err != nil {
+		log.Error(ctx, "cannot open and validate zip", err, logData)
 		return err
 	}
 	defer archive.Close()
@@ -36,6 +38,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 	for _, f := range archive.Files {
 		err = h.UploadService.SendFile(ctx, f, "title", "collectionId", "licence", "licenceUrl")
 		if err != nil {
+			log.Error(ctx, "failed to upload file", err, log.Data{"file": f})
 			return err
 		}
 	}
