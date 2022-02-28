@@ -103,19 +103,19 @@ func TestMimeType(t *testing.T) {
 
 func TestIsRegular(t *testing.T) {
 
-	Convey("Given a regular file", t, func() {
+	Convey("Given a regular file IsRegular should be true", t, func() {
 		f := &zip.File{FileHeader: zip.FileHeader{Name: "regular"}}
 		b := importer.IsRegular(f)
 		So(b, ShouldBeTrue)
 	})
 
-	Convey("Given a hidden file", t, func() {
+	Convey("Given a hidden file IsRegular should be false", t, func() {
 		f := &zip.File{FileHeader: zip.FileHeader{Name: ".hidden"}}
 		b := importer.IsRegular(f)
 		So(b, ShouldBeFalse)
 	})
 
-	Convey("Given a file from a MacOS compressed zip file", t, func() {
+	Convey("Given a file from a MacOS compressed zip file IsRegular should be false", t, func() {
 		//https://superuser.com/questions/104500/what-is-macosx-folder
 		f := &zip.File{FileHeader: zip.FileHeader{Name: "__MACOSX"}}
 		b := importer.IsRegular(f)
