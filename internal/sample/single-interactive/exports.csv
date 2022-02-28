@@ -1,0 +1,184 @@
+id,parentId,name,size,size2
+c0,NULL,Total,180851,0.479
+c1,c0,North East,4747,0.490
+c1_1,c1,UKCPrimary and utilities,75,0.867
+c1_10,c1,UKCReal estate activities,2,1.000
+c1_11,c1,"UKCProfessional, scientific and technical activities",176,0.307
+c1_12,c1,UKCAdministrative and support service activities,270,0.593
+c1_13,c1,UKCOther service industries,354,0.280
+c1_14,c1,UKCTravel-related trade,1701,0.611
+c1_2,c1,UKCManufacturing,491,0.330
+c1_3,c1,UKCConstruction,61,0.787
+c1_4,c1,UKCWholesale and motor trades,102,0.461
+c1_5,c1,UKCRetail excluding motor trades,72,0.500
+c1_6,c1,UKCTransportation and storage,328,0.595
+c1_7,c1,UKCAccommodation and food service activities,13,0.231
+c1_8,c1,UKCInformation and communication,329,0.489
+c1_9,c1,UKCFinancial and insurance activities,772,0.328
+c10,c0,Wales,4702,0.532
+c10_1,c10,UKLPrimary and utilities,34,0.735
+c10_10,c10,UKLReal estate activities,0,0.000
+c10_11,c10,"UKLProfessional, scientific and technical activities",0,0.000
+c10_12,c10,UKLAdministrative and support service activities,234,0.667
+c10_13,c10,UKLOther service industries,0,0.000
+c10_14,c10,UKLTravel-related trade,1806,0.612
+c10_15,c10,UKLSuppressed,1362,0.343
+c10_2,c10,UKLManufacturing,749,0.579
+c10_3,c10,UKLConstruction,37,0.622
+c10_4,c10,UKLWholesale and motor trades,0,0.000
+c10_5,c10,UKLRetail excluding motor trades,0,0.000
+c10_6,c10,UKLTransportation and storage,263,0.578
+c10_7,c10,UKLAccommodation and food service activities,0,0.000
+c10_8,c10,UKLInformation and communication,217,0.636
+c10_9,c10,UKLFinancial and insurance activities,0,0.000
+c11,c0,Scotland,13728,0.434
+c11_1,c11,UKMPrimary and utilities,1148,0.417
+c11_10,c11,UKMReal estate activities,9,0.667
+c11_11,c11,"UKMProfessional, scientific and technical activities",1672,0.229
+c11_12,c11,UKMAdministrative and support service activities,644,0.610
+c11_13,c11,UKMOther service industries,739,0.219
+c11_14,c11,UKMTravel-related trade,3534,0.612
+c11_2,c11,UKMManufacturing,988,0.440
+c11_3,c11,UKMConstruction,128,0.570
+c11_4,c11,UKMWholesale and motor trades,286,0.552
+c11_5,c11,UKMRetail excluding motor trades,173,0.457
+c11_6,c11,UKMTransportation and storage,979,0.576
+c11_7,c11,UKMAccommodation and food service activities,51,0.431
+c11_8,c11,UKMInformation and communication,774,0.372
+c11_9,c11,UKMFinancial and insurance activities,2602,0.288
+c12,c0,Northern Ireland,1545,0.616
+c12_1,c12,UKNPrimary and utilities,22,0.591
+c12_10,c12,UKNReal estate activities,0,0.000
+c12_11,c12,"UKNProfessional, scientific and technical activities",0,0.000
+c12_12,c12,UKNAdministrative and support service activities,86,0.512
+c12_13,c12,UKNOther service industries,0,0.000
+c12_14,c12,UKNTravel-related trade,671,0.611
+c12_15,c12,UKNSuppressed,184,0.696
+c12_2,c12,UKNManufacturing,261,0.716
+c12_3,c12,UKNConstruction,37,0.838
+c12_4,c12,UKNWholesale and motor trades,0,0.000
+c12_5,c12,UKNRetail excluding motor trades,0,0.000
+c12_6,c12,UKNTransportation and storage,173,0.555
+c12_7,c12,UKNAccommodation and food service activities,0,0.000
+c12_8,c12,UKNInformation and communication,111,0.387
+c12_9,c12,UKNFinancial and insurance activities,0,0.000
+c2,c0,North West,16172,0.548
+c2_1,c2,UKDPrimary and utilities,111,0.856
+c2_10,c2,UKDReal estate activities,14,0.857
+c2_11,c2,"UKDProfessional, scientific and technical activities",714,0.501
+c2_12,c2,UKDAdministrative and support service activities,807,0.612
+c2_13,c2,UKDOther service industries,1140,0.418
+c2_14,c2,UKDTravel-related trade,5822,0.612
+c2_2,c2,UKDManufacturing,1656,0.661
+c2_3,c2,UKDConstruction,135,0.622
+c2_4,c2,UKDWholesale and motor trades,633,0.708
+c2_5,c2,UKDRetail excluding motor trades,268,0.414
+c2_6,c2,UKDTransportation and storage,1449,0.591
+c2_7,c2,UKDAccommodation and food service activities,35,0.314
+c2_8,c2,UKDInformation and communication,1066,0.490
+c2_9,c2,UKDFinancial and insurance activities,2321,0.318
+c3,c0,Yorkshire and The Humber,10323,0.521
+c3_1,c3,UKEPrimary and utilities,102,0.794
+c3_10,c3,UKEReal estate activities,5,0.800
+c3_11,c3,"UKEProfessional, scientific and technical activities",456,0.539
+c3_12,c3,UKEAdministrative and support service activities,452,0.608
+c3_13,c3,UKEOther service industries,595,0.217
+c3_14,c3,UKETravel-related trade,3960,0.612
+c3_2,c3,UKEManufacturing,583,0.698
+c3_3,c3,UKEConstruction,80,0.613
+c3_4,c3,UKEWholesale and motor trades,245,0.555
+c3_5,c3,UKERetail excluding motor trades,191,0.372
+c3_6,c3,UKETransportation and storage,957,0.586
+c3_7,c3,UKEAccommodation and food service activities,20,0.350
+c3_8,c3,UKEInformation and communication,462,0.600
+c3_9,c3,UKEFinancial and insurance activities,2215,0.324
+c4,c0,East Midlands,7908,0.551
+c4_1,c4,UKFPrimary and utilities,167,0.719
+c4_10,c4,UKFReal estate activities,2,0.500
+c4_11,c4,"UKFProfessional, scientific and technical activities",526,0.667
+c4_12,c4,UKFAdministrative and support service activities,369,0.653
+c4_13,c4,UKFOther service industries,369,0.228
+c4_14,c4,UKFTravel-related trade,3001,0.612
+c4_2,c4,UKFManufacturing,955,0.552
+c4_3,c4,UKFConstruction,64,0.641
+c4_4,c4,UKFWholesale and motor trades,267,0.644
+c4_5,c4,UKFRetail excluding motor trades,120,0.450
+c4_6,c4,UKFTransportation and storage,712,0.579
+c4_7,c4,UKFAccommodation and food service activities,15,0.200
+c4_8,c4,UKFInformation and communication,324,0.512
+c4_9,c4,UKFFinancial and insurance activities,1017,0.343
+c5,c0,West Midlands,10501,0.534
+c5_1,c5,UKGPrimary and utilities,93,0.645
+c5_10,c5,UKGReal estate activities,5,0.800
+c5_11,c5,"UKGProfessional, scientific and technical activities",300,0.563
+c5_12,c5,UKGAdministrative and support service activities,436,0.622
+c5_13,c5,UKGOther service industries,606,0.238
+c5_14,c5,UKGTravel-related trade,4035,0.612
+c5_2,c5,UKGManufacturing,870,0.711
+c5_3,c5,UKGConstruction,97,0.691
+c5_4,c5,UKGWholesale and motor trades,545,0.517
+c5_5,c5,UKGRetail excluding motor trades,182,0.456
+c5_6,c5,UKGTransportation and storage,1127,0.584
+c5_7,c5,UKGAccommodation and food service activities,22,0.409
+c5_8,c5,UKGInformation and communication,586,0.439
+c5_9,c5,UKGFinancial and insurance activities,1596,0.324
+c6,c0,East of England,14524,0.500
+c6_1,c6,UKHPrimary and utilities,93,0.731
+c6_10,c6,UKHReal estate activities,0,0.000
+c6_11,c6,"UKHProfessional, scientific and technical activities",3023,0.287
+c6_12,c6,UKHAdministrative and support service activities,1321,0.703
+c6_13,c6,UKHOther service industries,537,0.277
+c6_14,c6,UKHTravel-related trade,4117,0.612
+c6_2,c6,UKHManufacturing,1261,0.393
+c6_3,c6,UKHConstruction,182,0.698
+c6_4,c6,UKHWholesale and motor trades,620,0.642
+c6_5,c6,UKHRetail excluding motor trades,184,0.516
+c6_6,c6,UKHTransportation and storage,1297,0.579
+c6_7,c6,UKHAccommodation and food service activities,0,0.000
+c6_8,c6,UKHInformation and communication,888,0.544
+c6_9,c6,UKHFinancial and insurance activities,0,0.000
+c7,c0,London,60615,0.426
+c7_1,c7,UKIPrimary and utilities,219,0.758
+c7_10,c7,UKIReal estate activities,59,0.559
+c7_11,c7,"UKIProfessional, scientific and technical activities",7176,0.359
+c7_12,c7,UKIAdministrative and support service activities,3442,0.528
+c7_13,c7,UKIOther service industries,1624,0.282
+c7_14,c7,UKITravel-related trade,11091,0.612
+c7_2,c7,UKIManufacturing,756,0.649
+c7_3,c7,UKIConstruction,571,0.769
+c7_4,c7,UKIWholesale and motor trades,2323,0.460
+c7_5,c7,UKIRetail excluding motor trades,815,0.453
+c7_6,c7,UKITransportation and storage,3456,0.608
+c7_7,c7,UKIAccommodation and food service activities,95,0.516
+c7_8,c7,UKIInformation and communication,13890,0.376
+c7_9,c7,UKIFinancial and insurance activities,15098,0.281
+c8,c0,South East,26001,0.480
+c8_1,c8,UKJPrimary and utilities,147,0.850
+c8_10,c8,UKJReal estate activities,20,0.900
+c8_11,c8,"UKJProfessional, scientific and technical activities",3774,0.296
+c8_12,c8,UKJAdministrative and support service activities,1457,0.601
+c8_13,c8,UKJOther service industries,908,0.290
+c8_14,c8,UKJTravel-related trade,7447,0.612
+c8_2,c8,UKJManufacturing,1772,0.427
+c8_3,c8,UKJConstruction,241,0.714
+c8_4,c8,UKJWholesale and motor trades,1348,0.532
+c8_5,c8,UKJRetail excluding motor trades,284,0.458
+c8_6,c8,UKJTransportation and storage,1961,0.581
+c8_7,c8,UKJAccommodation and food service activities,38,0.263
+c8_8,c8,UKJInformation and communication,4017,0.440
+c8_9,c8,UKJFinancial and insurance activities,2586,0.326
+c9,c0,South West,10086,0.503
+c9_1,c9,UKKPrimary and utilities,146,0.849
+c9_10,c9,UKKReal estate activities,7,0.714
+c9_11,c9,"UKKProfessional, scientific and technical activities",341,0.381
+c9_12,c9,UKKAdministrative and support service activities,781,0.644
+c9_13,c9,UKKOther service industries,478,0.234
+c9_14,c9,UKKTravel-related trade,3370,0.612
+c9_2,c9,UKKManufacturing,731,0.436
+c9_3,c9,UKKConstruction,86,0.570
+c9_4,c9,UKKWholesale and motor trades,536,0.431
+c9_5,c9,UKKRetail excluding motor trades,215,0.456
+c9_6,c9,UKKTransportation and storage,640,0.583
+c9_7,c9,UKKAccommodation and food service activities,18,0.444
+c9_8,c9,UKKInformation and communication,558,0.582
+c9_9,c9,UKKFinancial and insurance activities,2178,0.336
