@@ -74,7 +74,9 @@ func (a *Archive) Close() {
 }
 
 func IsRegular(f *zip.File) bool {
-	return f.Mode().IsRegular() && f.Name[0] != '.' && f.Name != "__MACOSX"
+	//MACOSX created when right-click, compress: https://superuser.com/questions/104500/what-is-macosx-folder
+	b := filepath.Base(f.Name)
+	return f.Mode().IsRegular() && b[0] != '.' && b != "__MACOSX"
 }
 
 func MimeType(f *zip.File) (string, error) {

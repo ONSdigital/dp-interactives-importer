@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/health"
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
@@ -23,6 +23,7 @@ type Initialiser interface {
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
 	DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.S3Interface, error)
 	DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error)
+	DoGetInteractivesAPIClient(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server

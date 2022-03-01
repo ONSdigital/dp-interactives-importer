@@ -41,7 +41,10 @@ func main() {
 	//https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
 	//https://bucket-name.s3.Region.amazonaws.com/key-name
 
-	event1 := importer.InteractivesUploaded{Path: "single-interactive.zip"}
+	event1 := importer.InteractivesUploaded{
+		ID:   "52bd5e13-8dda-4593-bfe3-d4999bf3cd51", //manually created via Postman
+		Path: "f5XNzqLK76cMwldF835lkCuKO34=/single-interactive.zip",
+	}
 	sendEvent(producer, event1)
 
 	time.Sleep(5 * time.Second)

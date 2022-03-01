@@ -34,7 +34,7 @@ func NewUploadService(backend UploadServiceBackend, chunkSize int64) *UploadServ
 type UploadService struct {
 	backend   UploadServiceBackend
 	chunkSize int64
-	Uploads   []Upload
+	Uploads   []Upload //todo get rid of this when integrated into dp-upload-service
 }
 
 func (s *UploadService) SendFile(ctx context.Context, f *File, title, collectionId, licence, licenceUrl string) error {

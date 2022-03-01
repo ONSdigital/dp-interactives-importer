@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
@@ -48,10 +49,19 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 	uploadService := importer.NewUploadService(uploadServiceBackend, 0) //todo define chunk size
 
+	// API router & clients
+	APIRouter := health.NewClient("api-router", cfg.APIRouterURL)
+	interactivesAPIClient, err := serviceList.GetInteractivesAPIClient(ctx, APIRouter)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise clients via api router", err)
+		return nil, err
+	}
+
 	// Event Handler for Kafka Consumer
 	importer.Consume(ctx, consumer, &importer.InteractivesUploadedHandler{
-		S3:            s3Client,
-		UploadService: uploadService,
+		S3:                    s3Client,
+		UploadService:         uploadService,
+		InteractivesAPIClient: interactivesAPIClient,
 	}, cfg.KafkaConsumerWorkers)
 
 	//heathcheck - start
@@ -60,7 +70,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend, APIRouter); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -78,7 +88,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	return &Service{
 		config:        cfg,
 		serviceList:   serviceList,
-		healthCheck:   nil,
+		healthCheck:   hc,
 		kafkaConsumer: consumer,
 	}, nil
 }
@@ -131,7 +141,8 @@ func registerCheckers(ctx context.Context,
 	hc HealthChecker,
 	consumer kafka.IConsumerGroup,
 	s3 importer.S3Interface,
-	uploadServiceBackend importer.UploadServiceBackend) (err error) {
+	uploadServiceBackend importer.UploadServiceBackend,
+	APIRouter *health.Client) (err error) {
 
 	hasErrors := false
 
@@ -148,6 +159,11 @@ func registerCheckers(ctx context.Context,
 	if err = hc.AddCheck("Upload service backend", uploadServiceBackend.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for upload service", err)
+	}
+
+	if err = hc.AddCheck("API router", APIRouter.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "failed to add API router health checker", err)
 	}
 
 	if hasErrors {

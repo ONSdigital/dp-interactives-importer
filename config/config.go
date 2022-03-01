@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
-	ApiRouterUrl               string        `envconfig:"API_ROUTER_URL"`
+	APIRouterURL               string        `envconfig:"API_ROUTER_URL"`
 	AwsEndpoint                string        `envconfig:"AWS_ENDPOINT"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`
@@ -37,7 +37,7 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   "localhost:27400",
-		ApiRouterUrl:               "http://localhost:25100", //todo this is dp-upload-service port
+		APIRouterURL:               "http://localhost:23200/v1",
 		AwsRegion:                  "eu-west-1",
 		DownloadBucketName:         "dp-interactives-file-uploads",
 		Brokers:                    []string{"localhost:9092"},

@@ -107,18 +107,26 @@ func TestIsRegular(t *testing.T) {
 		f := &zip.File{FileHeader: zip.FileHeader{Name: "regular"}}
 		b := importer.IsRegular(f)
 		So(b, ShouldBeTrue)
+		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/regular"}}
+		b = importer.IsRegular(f)
+		So(b, ShouldBeTrue)
 	})
 
 	Convey("Given a hidden file IsRegular should be false", t, func() {
 		f := &zip.File{FileHeader: zip.FileHeader{Name: ".hidden"}}
 		b := importer.IsRegular(f)
 		So(b, ShouldBeFalse)
+		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/.hidden"}}
+		b = importer.IsRegular(f)
+		So(b, ShouldBeFalse)
 	})
 
 	Convey("Given a file from a MacOS compressed zip file IsRegular should be false", t, func() {
-		//https://superuser.com/questions/104500/what-is-macosx-folder
 		f := &zip.File{FileHeader: zip.FileHeader{Name: "__MACOSX"}}
 		b := importer.IsRegular(f)
+		So(b, ShouldBeFalse)
+		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/__MACOSX"}}
+		b = importer.IsRegular(f)
 		So(b, ShouldBeFalse)
 	})
 }

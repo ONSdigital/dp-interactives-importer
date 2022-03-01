@@ -24,7 +24,7 @@ build:
 .PHONY: debug
 debug:
 	go build -tags 'debug' $(LDFLAGS) -o $(BINPATH)/dp-interactives-importer
-	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-interactives-importer
+	HUMAN_LOG=1 DEBUG=1 AWS_ENDPOINT=http://localhost:4566 $(BINPATH)/dp-interactives-importer
 
 .PHONY: test
 test:

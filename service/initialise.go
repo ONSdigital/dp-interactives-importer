@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
 	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -10,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/health"
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
@@ -24,6 +25,7 @@ type ExternalServiceList struct {
 	KafkaConsumer        bool
 	S3Client             bool
 	UploadServiceBackend bool
+	InteractivesApi      bool
 	Init                 Initialiser
 }
 
@@ -33,6 +35,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 		KafkaConsumer:        false,
 		S3Client:             false,
 		UploadServiceBackend: false,
+		InteractivesApi:      false,
 		Init:                 initialiser,
 	}
 }
@@ -72,6 +75,16 @@ func (e *ExternalServiceList) GetUploadServiceBackend(ctx context.Context, cfg *
 		return nil, err
 	}
 	e.UploadServiceBackend = true
+	return client, nil
+}
+
+// GetInteractivesAPIClient creates an interactives api client and sets the InteractivesApi flag to true
+func (e *ExternalServiceList) GetInteractivesAPIClient(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
+	client, err := e.Init.DoGetInteractivesAPIClient(ctx, apiRouter)
+	if err != nil {
+		return nil, err
+	}
+	e.InteractivesApi = true
 	return client, nil
 }
 
@@ -155,7 +168,7 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
-	//uploadSvcBackend := uploadservice.New(cfg.ApiRouterUrl)
+	//uploadSvcBackend := uploadservice.New(cfg.APIRouterURL)
 
 	//mocked - i got working e2e locally but had to make significant code changes in dp-upload-service
 	uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
@@ -170,6 +183,12 @@ func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config
 	}
 
 	return uploadSvcBackend, nil
+}
+
+// DoGetInteractivesApiClient returns an interactives api client
+func (e *Init) DoGetInteractivesAPIClient(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
+	apiClient := interactives.NewWithHealthClient(apiRouter)
+	return apiClient, nil
 }
 
 // DoGetHealthClient creates a new Health Client for the provided name and url
