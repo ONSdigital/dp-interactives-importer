@@ -59,6 +59,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// Event Handler for Kafka Consumer
 	importer.Consume(ctx, consumer, &importer.InteractivesUploadedHandler{
+		Cfg:                   cfg,
 		S3:                    s3Client,
 		UploadService:         uploadService,
 		InteractivesAPIClient: interactivesAPIClient,

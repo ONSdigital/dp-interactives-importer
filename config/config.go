@@ -9,6 +9,7 @@ import (
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	APIRouterURL               string        `envconfig:"API_ROUTER_URL"`
+	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"`
 	AwsEndpoint                string        `envconfig:"AWS_ENDPOINT"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`

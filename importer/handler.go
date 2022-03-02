@@ -3,6 +3,7 @@ package importer
 import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
+	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/log.go/v2/log"
 	"io"
 )
@@ -12,6 +13,7 @@ var (
 )
 
 type InteractivesUploadedHandler struct {
+	Cfg                   *config.Config
 	S3                    S3Interface
 	UploadService         *UploadService
 	InteractivesAPIClient InteractivesAPIClient
@@ -44,8 +46,8 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 			update.Interactive.Archive.Size = *zipSize
 			update.Interactive.Archive.Files = archiveFiles
 		}
-		// todo user & service auth
-		apiErr := h.InteractivesAPIClient.PutInteractive(ctx, "", "", event.ID, update)
+		// user token not valid - we auth user on api endpoints
+		apiErr := h.InteractivesAPIClient.PutInteractive(ctx, "", h.Cfg.ServiceAuthToken, event.ID, update)
 		if apiErr != nil {
 			//todo what if this fails - retry?
 			logData["apiError"] = apiErr.Error()
