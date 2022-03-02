@@ -6,11 +6,8 @@ replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
 replace github.com/dgrijalva/jwt-go => github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible
 
-replace github.com/ONSdigital/dp-api-clients-go/v2 => /Users/markryan/workspace/methods/ons/dp-api-clients-go
-
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.43.0
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.92.5
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.96.7
 	github.com/ONSdigital/dp-component-test v0.6.4
 	github.com/ONSdigital/dp-healthcheck v1.2.3
 	github.com/ONSdigital/dp-kafka/v2 v2.4.4
@@ -30,6 +27,7 @@ require (
 )
 
 require (
+	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.2.0 // indirect
 	github.com/Shopify/sarama v1.30.1 // indirect
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
