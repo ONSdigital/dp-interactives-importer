@@ -22,6 +22,8 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^these events are consumed:$`, c.theseEventsAreConsumed)
 	ctx.Step(`^"([^"]*)" interactives should be downloaded from s3 successfully$`, c.theseInteractivesAreDownloadedFromS3)
 	ctx.Step(`^"([^"]*)" interactives should be uploaded via the upload service$`, c.interactivesShouldBeUploadedViaTheUploadService)
+	ctx.Step(`^"([^"]*)" interactive should be successfully updated via the interactives API$`, c.interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI)
+	ctx.Step(`^"([^"]*)" interactive should be updated as a failure via the interactives API$`, c.interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI)
 }
 
 func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
@@ -89,5 +91,24 @@ func (c *Component) theseInteractivesAreDownloadedFromS3(count int) error {
 
 func (c *Component) interactivesShouldBeUploadedViaTheUploadService(count int) error {
 	assert.Equal(&c.ErrorFeature, count, len(c.UploadServiceBackend.UploadCalls()))
+	return c.ErrorFeature.StepError()
+}
+
+func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(id string) error {
+	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PutInteractiveCalls()))
+	firstCall := c.InteractivesAPI.PutInteractiveCalls()[0]
+	assert.Equal(&c.ErrorFeature, id, firstCall.InteractiveID)
+	assert.Equal(&c.ErrorFeature, id, firstCall.Update.Interactive.ID)
+	assert.True(&c.ErrorFeature, *firstCall.Update.ImportSuccessful)
+	return c.ErrorFeature.StepError()
+}
+
+func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI(id string) error {
+	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PutInteractiveCalls()))
+	firstCall := c.InteractivesAPI.PutInteractiveCalls()[0]
+	assert.Equal(&c.ErrorFeature, id, firstCall.InteractiveID)
+	assert.Equal(&c.ErrorFeature, id, firstCall.Update.Interactive.ID)
+	assert.NotEmpty(&c.ErrorFeature, firstCall.Update.Interactive.Metadata["error"])
+	assert.False(&c.ErrorFeature, *firstCall.Update.ImportSuccessful)
 	return c.ErrorFeature.StepError()
 }

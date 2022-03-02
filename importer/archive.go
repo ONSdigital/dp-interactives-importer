@@ -2,6 +2,7 @@ package importer
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -9,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"mime"
-	"os"
 	"path/filepath"
 )
 
@@ -17,26 +17,16 @@ type Archive struct {
 	Context    context.Context
 	ReadCloser io.ReadCloser
 	Files      []*File
-	TmpRemoved bool
 }
 
 func (a *Archive) OpenAndValidate() error {
-	tmp, err := os.CreateTemp("", "zip_*")
+	//need to read it all for archives
+	raw, err := io.ReadAll(a.ReadCloser)
 	if err != nil {
 		return err
 	}
-	defer func(f *os.File) {
-		if e := os.Remove(f.Name()); e != nil {
-			logData := log.Data{"error": e.Error(), "name": f.Name()}
-			log.Warn(a.Context, "cannot remove tmp file", logData)
-		}
-	}(tmp)
 
-	if _, err = io.Copy(tmp, a.ReadCloser); err != nil {
-		return err
-	}
-
-	zipReader, err := zip.OpenReader(tmp.Name())
+	zipReader, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
 	if err != nil {
 		return err
 	}
@@ -69,7 +59,7 @@ func (a *Archive) OpenAndValidate() error {
 
 func (a *Archive) Close() {
 	if e := a.ReadCloser.Close(); e != nil {
-		log.Warn(a.Context, "cannot close zip file", log.Data{"error": e.Error()})
+		log.Warn(a.Context, "cannot close archive", log.Data{"error": e.Error()})
 	}
 }
 

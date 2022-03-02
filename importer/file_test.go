@@ -2,14 +2,20 @@ package importer_test
 
 import (
 	"archive/zip"
+	"bytes"
+	"embed"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
-	"github.com/ONSdigital/dp-interactives-importer/internal/test"
 	. "github.com/smartystreets/goconvey/convey"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+)
+
+var (
+	//go:embed test/styles.css
+	testFile embed.FS
 )
 
 func getConcatFunc(t *testing.T, content *[]byte) func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
@@ -109,19 +115,13 @@ func TestFile(t *testing.T) {
 	})
 
 	Convey("Given an actual file", t, func() {
-		testContent := "this is some dummy content"
-		tmpFileName, size, err := test.CreateTempFile(testContent)
-		defer os.Remove(tmpFileName)
-		So(err, ShouldBeNil)
-		So(size, ShouldNotBeZeroValue)
-
-		tmpFile, err := os.Open(tmpFileName)
+		raw, err := testFile.ReadFile("test/styles.css")
 		So(err, ShouldBeNil)
 
 		f := &importer.File{
-			Name:        "actual_file",
-			ReadCloser:  tmpFile,
-			SizeInBytes: size,
+			Name:        "test/styles.css",
+			ReadCloser:  io.NopCloser(bytes.NewReader(raw)),
+			SizeInBytes: int64(len(raw)),
 		}
 
 		Convey("When split with default chunk size", func() {
@@ -132,8 +132,9 @@ func TestFile(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 
-			Convey("And the content should match with 1 chunk processed", func() {
-				So(string(content), ShouldEqual, testContent)
+			Convey("And the content should not be empty with 1 chunk processed", func() {
+				So(string(content), ShouldStartWith, "@import url(\"//fonts.googleapis.com")
+				So(string(content), ShouldEndWith, "color: #222222;\n}\n")
 				So(totalChunks, ShouldEqual, 1)
 			})
 
@@ -143,41 +144,39 @@ func TestFile(t *testing.T) {
 		})
 	})
 
-	Convey("Given a file from within a zip", t, func() {
-		testContent := "test"
-		tmpZipName, err := test.CreateTestZip(testContent)
-		defer os.Remove(tmpZipName)
+	Convey("Given an actual sample zip", t, func() {
+		raw, err := zipFile.ReadFile("test/single-interactive.zip")
 		So(err, ShouldBeNil)
 
-		zipReader, err := zip.OpenReader(tmpZipName)
-		defer zipReader.Close()
+		zipReader, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
 		So(err, ShouldBeNil)
-		So(len(zipReader.File), ShouldEqual, 1)
 
-		zipFile, err := zipReader.File[0].Open()
-		size := int64(zipReader.File[0].UncompressedSize64)
+		var count, totalChunks int
+		Convey("When we split and close each file within", func() {
+			for _, z := range zipReader.File {
+				if z.Mode().IsRegular() {
+					count++
+					size := int64(z.UncompressedSize64)
+					rc, err := z.Open()
+					So(err, ShouldBeNil)
 
-		f := &importer.File{
-			Name:        "zip_file",
-			ReadCloser:  zipFile,
-			SizeInBytes: size,
-		}
+					f := &importer.File{
+						Name:        z.Name,
+						ReadCloser:  rc,
+						SizeInBytes: size,
+					}
 
-		Convey("When split with default chunk size", func() {
-			var content []byte
-			totalChunks, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(t, &content))
+					var content []byte
+					tc, err := f.SplitAndClose(importer.DefaultChunkSize, getConcatFunc(t, &content))
+					totalChunks = totalChunks + int(tc)
 
-			Convey("Then there should be no error returned", func() {
-				So(err, ShouldBeNil)
-			})
+					So(err, ShouldBeNil)
+					So(content, ShouldNotBeEmpty)
+				}
+			}
 
-			Convey("And the content should match with 1 chunk processed", func() {
-				So(string(content), ShouldEqual, testContent)
-				So(totalChunks, ShouldEqual, 1)
-			})
-
-			Convey("And the file is closed", func() {
-				So(f.Closed, ShouldBeTrue)
+			Convey("Then total chunks should equal number of files processed", func() {
+				So(totalChunks, ShouldEqual, count)
 			})
 		})
 	})

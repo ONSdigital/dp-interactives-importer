@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	//go:embed test/*
+	//go:embed test/single-interactive.zip
 	zipFile embed.FS
 )
 

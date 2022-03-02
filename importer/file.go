@@ -48,14 +48,15 @@ func (f *File) SplitAndClose(chunkSize int64, doFunc FileProcessor) (totalChunks
 
 		var n int
 		buf := make([]byte, chunkSize)
-		if n, err = r.Read(buf); n == 0 || err != nil {
-			if err != nil && err != io.EOF {
+		// io.ReadFull essential for zip files
+		if n, err = io.ReadFull(r, buf); n == 0 || err != nil {
+			if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 				return
 			}
 			if n == 0 {
 				//Note: zip files behave slightly differently to normal readers: https://github.com/golang/go/issues/32858
 				//      you get n>0 and the EOF error not 0 and EOF like others
-				err = nil //dont return io.EOF
+				err = nil //dont return EOFs
 				break     //all done
 			}
 		}

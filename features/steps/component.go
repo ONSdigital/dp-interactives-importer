@@ -1,22 +1,32 @@
 package steps_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"embed"
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
+	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	component_test "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
 	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
-	"github.com/ONSdigital/dp-interactives-importer/internal/test"
 	"github.com/ONSdigital/dp-interactives-importer/service"
 	mocks_service "github.com/ONSdigital/dp-interactives-importer/service/mocks"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"os"
+)
+
+var (
+	//go:embed test/*
+	testZips embed.FS
+	zero     = int64(0)
 )
 
 type Component struct {
@@ -25,29 +35,41 @@ type Component struct {
 	KafkaConsumer        kafka.IConsumerGroup
 	S3Client             *mocks_importer.S3InterfaceMock
 	UploadServiceBackend *mocks_importer.UploadServiceBackendMock
+	InteractivesAPI      *mocks_importer.InteractivesAPIClientMock
 	killChan             chan os.Signal
 	errorChan            chan error
-	testZipArchive       *os.File
 }
 
-func NewInteractivesImporterComponent() *Component {
+func NewInteractivesImporterComponent() (*Component, error) {
 	c := &Component{
 		errorChan: make(chan error),
 	}
-
-	archiveName, _ := test.CreateTestZip("root.css", "root.html", "root.js")
-	c.testZipArchive, _ = os.Open(archiveName)
 
 	consumer := kafkatest.NewMessageConsumer(false)
 	consumer.CheckerFunc = funcCheck
 	c.KafkaConsumer = consumer
 
+	raw, err := testZips.ReadFile("test/test_zips.zip")
+	if err != nil {
+		return nil, err
+	}
+
+	zipReader, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
+	zipFilesForTest := make(map[string]*zip.File)
+	for _, f := range zipReader.File {
+		zipFilesForTest[f.Name] = f
+	}
+
 	c.S3Client = &mocks_importer.S3InterfaceMock{
 		CheckerFunc: funcCheck,
 		GetFunc: func(key string) (io.ReadCloser, *int64, error) {
-			stat, _ := c.testZipArchive.Stat()
-			size := stat.Size()
-			return c.testZipArchive, &size, nil
+			zipFile, ok := zipFilesForTest[key]
+			if !ok {
+				return nil, &zero, errors.Errorf("does not exist")
+			}
+			rc, e := zipFile.Open()
+			size := int64(zipFile.UncompressedSize64)
+			return rc, &size, e
 		},
 	}
 
@@ -60,22 +82,29 @@ func NewInteractivesImporterComponent() *Component {
 		},
 	}
 
+	c.InteractivesAPI = &mocks_importer.InteractivesAPIClientMock{
+		PutInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, metadata interactives.InteractiveUpdate) error {
+			return nil
+		},
+	}
+
 	initMock := &mocks_service.InitialiserMock{
-		DoGetHTTPServerFunc:           DoGetHTTPServerOk,
-		DoGetHealthCheckFunc:          DoGetHealthcheckOk,
-		DoGetHealthClientFunc:         DoGetHealthClient,
-		DoGetKafkaConsumerFunc:        DoGetConsumer(c),
-		DoGetS3ClientFunc:             DoGetS3Client(c),
-		DoGetUploadServiceBackendFunc: DoGetUploadServiceBackend(c),
+		DoGetHTTPServerFunc:            DoGetHTTPServerOk,
+		DoGetHealthCheckFunc:           DoGetHealthcheckOk,
+		DoGetHealthClientFunc:          DoGetHealthClient,
+		DoGetKafkaConsumerFunc:         DoGetConsumer(c),
+		DoGetS3ClientFunc:              DoGetS3Client(c),
+		DoGetUploadServiceBackendFunc:  DoGetUploadServiceBackend(c),
+		DoGetInteractivesAPIClientFunc: DoGetInteractivesAPIClient(c),
 	}
 
 	c.serviceList = service.NewServiceList(initMock)
 
-	return c
+	return c, nil
 }
 
 func (c *Component) Close() {
-	_ = os.Remove(c.testZipArchive.Name())
+
 }
 
 func (c *Component) Reset() {
@@ -117,6 +146,12 @@ func DoGetHTTPServerOk(bindAddr string, router http.Handler) service.HTTPServer 
 func DoGetUploadServiceBackend(c *Component) func(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
 	return func(_ context.Context, _ *config.Config) (importer.UploadServiceBackend, error) {
 		return c.UploadServiceBackend, nil
+	}
+}
+
+func DoGetInteractivesAPIClient(c *Component) func(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
+	return func(_ context.Context, _ *health.Client) (importer.InteractivesAPIClient, error) {
+		return c.InteractivesAPI, nil
 	}
 }
 

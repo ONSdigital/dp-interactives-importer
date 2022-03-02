@@ -11,6 +11,7 @@ import (
 
 //go:generate moq -out mocks/s3.go -pkg mocks_importer . S3Interface
 //go:generate moq -out mocks/upload_service_backend.go -pkg mocks_importer . UploadServiceBackend
+//go:generate moq -out mocks/interactives_api.go -pkg mocks_importer . InteractivesAPIClient
 
 type S3Interface interface {
 	Get(key string) (io.ReadCloser, *int64, error)
@@ -26,5 +27,5 @@ type UploadServiceBackend interface {
 }
 
 type InteractivesAPIClient interface {
-	PutInteractive(ctx context.Context, userAuthToken, serviceAuthToken, interactiveID string, metadata interactives.InteractiveUpdate) error
+	PutInteractive(ctx context.Context, userAuthToken, serviceAuthToken, interactiveID string, update interactives.InteractiveUpdate) error
 }

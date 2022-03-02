@@ -4,15 +4,12 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/log.go/v2/log"
+	"io"
 )
 
 var (
-	successful bool
+	successful, failure = true, false
 )
-
-func init() {
-	successful = true
-}
 
 type InteractivesUploadedHandler struct {
 	S3                    S3Interface
@@ -20,19 +17,49 @@ type InteractivesUploadedHandler struct {
 	InteractivesAPIClient InteractivesAPIClient
 }
 
-func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *InteractivesUploaded) error {
+func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *InteractivesUploaded) (err error) {
 	logData := log.Data{"id": event.ID, "path": event.Path}
 
+	var readCloser io.ReadCloser
+	var zipSize *int64
+	var archiveFiles []*interactives.InteractiveFile
+
+	// Defer an update via API - deferred so we always attempt an update!
+	defer func() {
+		update := interactives.InteractiveUpdate{
+			Interactive: interactives.Interactive{
+				ID: event.ID,
+				Archive: &interactives.InteractiveArchive{
+					Name: event.Path,
+				},
+				Metadata: make(map[string]string),
+			},
+		}
+		if err != nil {
+			logData["error"] = err.Error()
+			update.ImportSuccessful = &failure
+			update.Interactive.Metadata["error"] = err.Error()
+		} else {
+			update.ImportSuccessful = &successful
+			update.Interactive.Archive.Size = *zipSize
+			update.Interactive.Archive.Files = archiveFiles
+		}
+		// todo user & service auth
+		apiErr := h.InteractivesAPIClient.PutInteractive(ctx, "", "", event.ID, update)
+		if apiErr != nil {
+			//todo what if this fails - retry?
+			logData["apiError"] = apiErr.Error()
+			log.Warn(ctx, "failed to update interactive", logData)
+		}
+	}()
+
 	// Download zip file from s3
-	//todo handle paths???? /my-dir/my-dir-again/file.css
-	readCloser, zipSize, err := h.S3.Get(event.Path)
+	readCloser, zipSize, err = h.S3.Get(event.Path)
 	if err != nil {
 		log.Error(ctx, "cannot get zip from s3", err, logData)
 		return err
 	}
 	logData["zip_size"] = zipSize
-
-	// todo Sanity check - do we need to check for 0 size here?
 
 	// Open zip and validate contents
 	archive := &Archive{Context: ctx, ReadCloser: readCloser}
@@ -45,7 +72,6 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 	logData["num_files"] = len(archive.Files)
 
 	// Upload each file in zip
-	var archiveFiles []*interactives.InteractiveFile
 	for _, f := range archive.Files {
 		err = h.UploadService.SendFile(ctx, f, "title", "collectionId", "licence", "licenceUrl")
 		if err != nil {
@@ -57,25 +83,6 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 			Mimetype: f.MimeType,
 			Size:     f.SizeInBytes,
 		})
-	}
-
-	// Update interactive via API todo user & service auth
-	err = h.InteractivesAPIClient.PutInteractive(ctx, "", "",
-		event.ID,
-		interactives.InteractiveUpdate{
-			ImportSuccessful: &successful,
-			Interactive: interactives.Interactive{
-				ID: event.ID,
-				Archive: &interactives.InteractiveArchive{
-					Name:  event.Path,
-					Size:  *zipSize,
-					Files: archiveFiles,
-				},
-			},
-		})
-	if err != nil {
-		log.Error(ctx, "failed to update interactive", err, logData)
-		return err
 	}
 
 	log.Info(ctx, "successfully processed", logData)

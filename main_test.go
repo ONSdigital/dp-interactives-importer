@@ -21,7 +21,10 @@ type ComponentTest struct {
 }
 
 func (c *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
-	component := steps_test.NewInteractivesImporterComponent()
+	component, err := steps_test.NewInteractivesImporterComponent()
+	if err != nil {
+		c.testingT.Fatal("cannot create component")
+	}
 
 	ctx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		component.Reset()
