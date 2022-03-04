@@ -34,13 +34,12 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, event *Interac
 				Archive: &interactives.InteractiveArchive{
 					Name: event.Path,
 				},
-				Metadata: make(map[string]string),
 			},
 		}
 		if err != nil {
 			logData["error"] = err.Error()
 			update.ImportSuccessful = &failure
-			update.Interactive.Metadata["error"] = err.Error()
+			update.ImportMessage = err.Error()
 		} else {
 			update.ImportSuccessful = &successful
 			update.Interactive.Archive.Size = *zipSize

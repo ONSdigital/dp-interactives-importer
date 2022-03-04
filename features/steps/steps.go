@@ -108,7 +108,7 @@ func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI(id
 	firstCall := c.InteractivesAPI.PutInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.InteractiveID)
 	assert.Equal(&c.ErrorFeature, id, firstCall.Update.Interactive.ID)
-	assert.NotEmpty(&c.ErrorFeature, firstCall.Update.Interactive.Metadata["error"])
+	assert.NotEmpty(&c.ErrorFeature, firstCall.Update.ImportMessage)
 	assert.False(&c.ErrorFeature, *firstCall.Update.ImportSuccessful)
 	return c.ErrorFeature.StepError()
 }
