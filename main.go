@@ -42,6 +42,8 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "unable to retrieve service configuration")
 	}
 
+	log.Info(ctx, "configuration loaded", log.Data{"config": cfg})
+
 	// Run the service, providing an error channel for fatal errors
 	svcErrors := make(chan error, 1)
 	svcList := service.NewServiceList(&service.Init{})

@@ -12,8 +12,8 @@ const (
 )
 
 type Upload struct {
-	Title, CollectionId, Filename, Licence, LicenceUrl string
-	TotalChunks, TotalSize                             int64
+	Title, CollectionId, Path, Filename, Licence, LicenceUrl string
+	TotalChunks, TotalSize                                   int64
 }
 
 func NewUploadService(backend UploadServiceBackend, chunkSize int64) *UploadService {
@@ -38,9 +38,10 @@ type UploadService struct {
 }
 
 func (s *UploadService) SendFile(ctx context.Context, f *File, title, collectionId, licence, licenceUrl string) error {
-	filename := getUploadFilename(f.Name, collectionId, 1)
+	path, filename := getPathAndFilename(f.Name, collectionId, 1)
 	uploadFileFunc := func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
 		req := uploadservice.UploadJob{
+			Path:                 path,
 			ResumableFilename:    filename,
 			IsPublishable:        true, //todo isPublishable==true - assumes all files are publishable - confirm what this means (missing from swagger right now)
 			CollectionId:         collectionId,
@@ -70,6 +71,7 @@ func (s *UploadService) SendFile(ctx context.Context, f *File, title, collection
 	s.Uploads = append(s.Uploads, Upload{
 		Title:        title,
 		CollectionId: collectionId,
+		Path:         path,
 		Filename:     filename,
 		Licence:      licence,
 		LicenceUrl:   licenceUrl,
@@ -81,6 +83,6 @@ func (s *UploadService) SendFile(ctx context.Context, f *File, title, collection
 }
 
 //no leading slash: https://github.com/ONSdigital/dp-upload-service/blob/ecc6062e6fe5856385b5fafbe1105606c1a958ff/api/upload.go#L25
-func getUploadFilename(filename, collectionId string, version int) string {
-	return fmt.Sprintf("%s/%s/version-%d/%s", uploadRootDirectory, collectionId, version, filename)
+func getPathAndFilename(filename, collectionId string, version int) (string, string) {
+	return fmt.Sprintf("%s/%s/version-%d", uploadRootDirectory, collectionId, version), filename
 }

@@ -9,7 +9,7 @@ import (
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	APIRouterURL               string        `envconfig:"API_ROUTER_URL"`
-	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"`
+	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN" json:"-"`
 	AwsEndpoint                string        `envconfig:"AWS_ENDPOINT"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	DownloadBucketName         string        `envconfig:"DOWNLOAD_BUCKET_NAME"`
@@ -19,7 +19,7 @@ type Config struct {
 	KafkaSecProtocol           string        `envconfig:"KAFKA_SEC_PROTO"`
 	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"`
 	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
-	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"             json:"-"`
+	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY" json:"-"`
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	InteractivesReadTopic      string        `envconfig:"INTERACTIVES_READ_TOPIC"`
 	InteractivesGroup          string        `envconfig:"INTERACTIVES_GROUP"`
@@ -37,10 +37,10 @@ func Get() (*Config, error) {
 	}
 
 	cfg = &Config{
-		BindAddr:                   "localhost:27400",
+		BindAddr:                   ":27400",
 		APIRouterURL:               "http://localhost:23200/v1",
 		AwsRegion:                  "eu-west-1",
-		DownloadBucketName:         "dp-interactives-file-uploads",
+		DownloadBucketName:         "testing",
 		Brokers:                    []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
 		KafkaMaxBytes:              2000000,

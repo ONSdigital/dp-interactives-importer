@@ -62,6 +62,7 @@ func (e ErrInvalidAPIResponse) Code() int {
 var _ error = ErrInvalidAPIResponse{}
 
 type UploadJob struct {
+	Path                 string
 	ResumableFilename    string
 	IsPublishable        bool
 	CollectionId         string
@@ -127,6 +128,7 @@ func (c *Client) doPostForm(ctx context.Context, serviceToken, uri string, job U
 
 	payload := &bytes.Buffer{}
 	writer := multipart.NewWriter(payload)
+	_ = writer.WriteField("path", job.Path)
 	_ = writer.WriteField("resumableFilename", job.ResumableFilename)
 	_ = writer.WriteField("isPublishable", fmt.Sprintf("%v", job.IsPublishable))
 	_ = writer.WriteField("collectionId", job.CollectionId)
@@ -137,6 +139,7 @@ func (c *Client) doPostForm(ctx context.Context, serviceToken, uri string, job U
 	_ = writer.WriteField("licenceUrl", job.LicenceUrl)
 	_ = writer.WriteField("resumableChunkNumber", fmt.Sprintf("%d", job.ResumableChunkNumber))
 	_ = writer.WriteField("resumableTotalChunks", fmt.Sprintf("%d", job.ResumableTotalChunks))
+
 	f, err := os.Open(job.File.Name())
 	defer f.Close()
 	fileWriter, err := writer.CreateFormFile("file", job.File.Name())
