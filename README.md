@@ -5,6 +5,13 @@ Listens on a kafka topic for new interactives import events. When a new event is
 - unzip the file
 - send each file to the dp-upload-service
 
+## Getting started
+
+* Start docker-compose environment here: https://github.com/ONSdigital/dp-interactives-compose: `docker-compose --env-file=start-backend.env`
+* Run `make debug`
+* `curl 'http://localhost:27400/health' | jq`
+* Should see 200 with "status: OK"
+
 ### Dependencies
 
 * No further dependencies other than those defined in `go.mod`
