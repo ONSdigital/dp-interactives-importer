@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ErrNoIndexHtml = errors.New("interactive must containt 1 index.html")
+	ErrNoIndexHtml = errors.New("interactive must contain 1 index.html")
 	ErrMoreThanOneIndexHtml = errors.New("there can only be 1 index.html in an interactive")
 )
 type Archive struct {
