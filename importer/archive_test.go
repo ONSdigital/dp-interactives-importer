@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	"github.com/ONSdigital/dp-interactives-importer/importer"
-	"github.com/ONSdigital/dp-interactives-importer/internal/test"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/ONSdigital/dp-interactives-importer/importer"
+	"github.com/ONSdigital/dp-interactives-importer/internal/test"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -37,8 +38,40 @@ func TestArchive(t *testing.T) {
 		})
 	})
 
-	Convey("Given a valid zip file", t, func() {
+	Convey("Given an invalid zip file (no index.html)", t, func() {
 		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js")
+		defer os.Remove(archiveName)
+		So(err, ShouldBeNil)
+		So(archiveName, ShouldNotBeEmpty)
+
+		Convey("Then open should run successfully", func() {
+			archive, err := os.Open(archiveName)
+			So(err, ShouldBeNil)
+
+			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
+			err = a.OpenAndValidate()
+			So(err, ShouldEqual, importer.ErrNoIndexHtml)
+		})
+	})
+
+	Convey("Given an invalid zip file (multiple index.html)", t, func() {
+		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js", "index.html", "test/index.html")
+		defer os.Remove(archiveName)
+		So(err, ShouldBeNil)
+		So(archiveName, ShouldNotBeEmpty)
+
+		Convey("Then open should run successfully", func() {
+			archive, err := os.Open(archiveName)
+			So(err, ShouldBeNil)
+
+			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
+			err = a.OpenAndValidate()
+			So(err, ShouldEqual, importer.ErrMoreThanOneIndexHtml)
+		})
+	})
+
+	Convey("Given a valid zip file", t, func() {
+		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js", "index.html")
 		defer os.Remove(archiveName)
 		So(err, ShouldBeNil)
 		So(archiveName, ShouldNotBeEmpty)
@@ -51,8 +84,8 @@ func TestArchive(t *testing.T) {
 			err = a.OpenAndValidate()
 			So(err, ShouldBeNil)
 
-			Convey("And files in archive should be 3", func() {
-				So(len(a.Files), ShouldEqual, 3)
+			Convey("And files in archive should be 4", func() {
+				So(len(a.Files), ShouldEqual, 4)
 			})
 		})
 	})

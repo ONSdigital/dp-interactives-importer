@@ -5,14 +5,20 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/h2non/filetype"
-	"github.com/pkg/errors"
 	"io"
 	"mime"
 	"path/filepath"
+	"strings"
+
+	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/h2non/filetype"
+	"github.com/pkg/errors"
 )
 
+var (
+	ErrNoIndexHtml = errors.New("interactive must containt 1 index.html")
+	ErrMoreThanOneIndexHtml = errors.New("there can only be 1 index.html in an interactive")
+)
 type Archive struct {
 	Context    context.Context
 	ReadCloser io.ReadCloser
@@ -31,6 +37,7 @@ func (a *Archive) OpenAndValidate() error {
 		return err
 	}
 
+	hasIndexHtml := false
 	for _, f := range zipReader.File {
 		if IsRegular(f) {
 			mimetype, err := MimeType(f)
@@ -43,6 +50,13 @@ func (a *Archive) OpenAndValidate() error {
 				return err
 			}
 
+			if strings.EqualFold(filepath.Base(f.Name), "index.html") {
+				if hasIndexHtml {
+					return ErrMoreThanOneIndexHtml
+				}
+				hasIndexHtml = true
+			}
+
 			size := int64(f.UncompressedSize64)
 			a.Files = append(a.Files, &File{
 				Context:     a.Context,
@@ -52,6 +66,10 @@ func (a *Archive) OpenAndValidate() error {
 				MimeType:    mimetype,
 			})
 		}
+	}
+
+	if !hasIndexHtml {
+		return ErrNoIndexHtml
 	}
 
 	return nil
