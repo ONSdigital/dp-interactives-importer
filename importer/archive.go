@@ -16,9 +16,20 @@ import (
 )
 
 var (
-	ErrNoIndexHtml = errors.New("interactive must contain 1 index.html")
+	ErrNoIndexHtml          = errors.New("interactive must contain 1 index.html")
 	ErrMoreThanOneIndexHtml = errors.New("there can only be 1 index.html in an interactive")
+	fileMatchersToIgnore    = []matcher{
+		//hidden files
+		func(f string) bool { return f[0] == '.' },
+		//MACOSX created when right-click, compress: https://superuser.com/questions/104500/what-is-macosx-folder
+		func(f string) bool { return f == "__MACOSX" },
+		//https://en.wikipedia.org/wiki/Windows_thumbnail_cache
+		func(f string) bool { return f == "Thumbs.db" },
+	}
 )
+
+type matcher func(string) bool
+
 type Archive struct {
 	Context    context.Context
 	ReadCloser io.ReadCloser
@@ -82,9 +93,15 @@ func (a *Archive) Close() {
 }
 
 func IsRegular(f *zip.File) bool {
-	//MACOSX created when right-click, compress: https://superuser.com/questions/104500/what-is-macosx-folder
 	b := filepath.Base(f.Name)
-	return f.Mode().IsRegular() && b[0] != '.' && b != "__MACOSX"
+	ignore := !f.Mode().IsRegular()
+	for _, m := range fileMatchersToIgnore {
+		if ignore {
+			break
+		}
+		ignore = m(b)
+	}
+	return !ignore
 }
 
 func MimeType(f *zip.File) (string, error) {

@@ -162,4 +162,13 @@ func TestIsRegular(t *testing.T) {
 		b = importer.IsRegular(f)
 		So(b, ShouldBeFalse)
 	})
+
+	Convey("Given a file from a Windows compressed zip file IsRegular should be false", t, func() {
+		f := &zip.File{FileHeader: zip.FileHeader{Name: "Thumbs.db"}}
+		b := importer.IsRegular(f)
+		So(b, ShouldBeFalse)
+		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/Thumbs.db"}}
+		b = importer.IsRegular(f)
+		So(b, ShouldBeFalse)
+	})
 }
