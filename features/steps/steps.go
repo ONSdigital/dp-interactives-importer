@@ -11,8 +11,8 @@ import (
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	"github.com/ONSdigital/dp-interactives-importer/schema"
 	"github.com/ONSdigital/dp-interactives-importer/service"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/cucumber/godog"
 	"github.com/rdumont/assistdog"
 	"github.com/stretchr/testify/assert"
@@ -46,6 +46,7 @@ func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
 
 	// consume extracted observations
 	for _, e := range events {
+		e.CurrentFiles = []string{""} //needs empty value :(
 		if err := sendToConsumer(c.KafkaConsumer, e); err != nil {
 			return err
 		}

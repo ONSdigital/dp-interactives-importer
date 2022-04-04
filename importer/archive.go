@@ -36,6 +36,15 @@ type Archive struct {
 	Files      []*File
 }
 
+type File struct {
+	Context     context.Context
+	ReadCloser  io.ReadCloser
+	Name        string
+	MimeType    string
+	SizeInBytes int64
+	Closed      bool
+}
+
 func (a *Archive) OpenAndValidate() error {
 	//need to read it all for archives
 	raw, err := io.ReadAll(a.ReadCloser)

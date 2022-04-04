@@ -3,8 +3,8 @@ package importer
 import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
+	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	s3client "github.com/ONSdigital/dp-s3"
 	"io"
 )
@@ -22,8 +22,7 @@ type S3Interface interface {
 }
 
 type UploadServiceBackend interface {
-	Upload(ctx context.Context, serviceToken string, job uploadservice.UploadJob) error
-	Checker(ctx context.Context, state *health.CheckState) error
+	Upload(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error
 }
 
 type InteractivesAPIClient interface {

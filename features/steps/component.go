@@ -7,16 +7,16 @@ import (
 	"embed"
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
+	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
 	component_test "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
-	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
 	"github.com/ONSdigital/dp-interactives-importer/service"
 	mocks_service "github.com/ONSdigital/dp-interactives-importer/service/mocks"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -45,8 +45,29 @@ func NewInteractivesImporterComponent() (*Component, error) {
 		errorChan: make(chan error),
 	}
 
-	consumer := kafkatest.NewMessageConsumer(false)
+	consumer := kafkatest.NewMessageConsumer(true)
 	consumer.CheckerFunc = funcCheck
+	consumer.RegisterHandlerFunc = func(ctx context.Context, h kafka.Handler) error {
+		go func() {
+			for {
+				select {
+				case message, ok := <-consumer.Channels().Upstream:
+					if !ok {
+						return
+					}
+					err := h(context.TODO(), 1, message)
+					if err != nil {
+						return
+					}
+					message.Release()
+				case <-consumer.Channels().Closer:
+					return
+				}
+			}
+		}()
+		return nil
+	}
+	consumer.StartFunc = func() error { return nil }
 	c.KafkaConsumer = consumer
 
 	raw, err := testZips.ReadFile("test/test_zips.zip")
@@ -74,10 +95,7 @@ func NewInteractivesImporterComponent() (*Component, error) {
 	}
 
 	c.UploadServiceBackend = &mocks_importer.UploadServiceBackendMock{
-		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-			return nil
-		},
-		UploadFunc: func(_ context.Context, _ string, _ uploadservice.UploadJob) error {
+		UploadFunc: func(context.Context, io.ReadCloser, upload.Metadata) error {
 			return nil
 		},
 	}
@@ -149,8 +167,8 @@ func DoGetUploadServiceBackend(c *Component) func(ctx context.Context, cfg *conf
 	}
 }
 
-func DoGetInteractivesAPIClient(c *Component) func(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
-	return func(_ context.Context, _ *health.Client) (importer.InteractivesAPIClient, error) {
+func DoGetInteractivesAPIClient(c *Component) func(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
+	return func(_ context.Context, _ *config.Config) (importer.InteractivesAPIClient, error) {
 		return c.InteractivesAPI, nil
 	}
 }

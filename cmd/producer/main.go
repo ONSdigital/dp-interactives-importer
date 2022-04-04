@@ -8,7 +8,7 @@ import (
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	"github.com/ONSdigital/dp-interactives-importer/schema"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -23,13 +23,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	pChannels := kafka.CreateProducerChannels()
 	pConfig := &kafka.ProducerConfig{
-		MaxMessageBytes: &cfg.KafkaMaxBytes,
+		BrokerAddrs:     cfg.Brokers,               // compulsory
+		Topic:           cfg.InteractivesReadTopic, // compulsory
 		KafkaVersion:    &cfg.KafkaVersion,
+		MaxMessageBytes: &cfg.KafkaMaxBytes,
 	}
-
-	producer, err := kafka.NewProducer(ctx, brokers, cfg.InteractivesReadTopic, pChannels, pConfig)
+	producer, err := kafka.NewProducer(ctx, pConfig)
 	if err != nil {
 		log.Fatal(ctx, "failed to create kafka producer", err)
 		os.Exit(1)

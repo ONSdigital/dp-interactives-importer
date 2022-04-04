@@ -7,7 +7,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -47,23 +47,33 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "failed to initialise upload service", err)
 		return nil, err
 	}
-	uploadService := importer.NewUploadService(uploadServiceBackend, 0) //todo define chunk size
+	uploadService := importer.NewUploadService(uploadServiceBackend)
 
 	// API router & clients
 	APIRouter := health.NewClient("api-router", cfg.APIRouterURL)
-	interactivesAPIClient, err := serviceList.GetInteractivesAPIClient(ctx, APIRouter)
+	interactivesAPIClient, err := serviceList.GetInteractivesAPIClient(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise clients via api router", err)
 		return nil, err
 	}
 
 	// Event Handler for Kafka Consumer
-	importer.Consume(ctx, consumer, &importer.InteractivesUploadedHandler{
+	handler := &importer.InteractivesUploadedHandler{
 		Cfg:                   cfg,
 		S3:                    s3Client,
 		UploadService:         uploadService,
 		InteractivesAPIClient: interactivesAPIClient,
-	}, cfg.KafkaConsumerWorkers)
+	}
+	err = consumer.RegisterHandler(ctx, handler.Handle)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise kafka consumer", err)
+		return nil, err
+	}
+	err = consumer.Start()
+	if err != nil {
+		log.Fatal(ctx, "failed to start kafka consumer", err)
+		return nil, err
+	}
 
 	//heathcheck - start
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -155,11 +165,6 @@ func registerCheckers(ctx context.Context,
 	if err = hc.AddCheck("S3 bucket", s3.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for s3", err)
-	}
-
-	if err = hc.AddCheck("Upload service backend", uploadServiceBackend.Checker); err != nil {
-		hasErrors = true
-		log.Error(ctx, "error adding check for upload service", err)
 	}
 
 	if err = hc.AddCheck("API router", APIRouter.Checker); err != nil {

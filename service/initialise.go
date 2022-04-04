@@ -3,9 +3,7 @@ package service
 import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
-	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
-	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
-	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,7 +13,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	dps3 "github.com/ONSdigital/dp-s3"
 )
@@ -79,8 +77,8 @@ func (e *ExternalServiceList) GetUploadServiceBackend(ctx context.Context, cfg *
 }
 
 // GetInteractivesAPIClient creates an interactives api client and sets the InteractivesApi flag to true
-func (e *ExternalServiceList) GetInteractivesAPIClient(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
-	client, err := e.Init.DoGetInteractivesAPIClient(ctx, apiRouter)
+func (e *ExternalServiceList) GetInteractivesAPIClient(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
+	client, err := e.Init.DoGetInteractivesAPIClient(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -116,12 +114,16 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
 	kafkaOffset := kafka.OffsetOldest
 
-	cConfig := &kafka.ConsumerGroupConfig{
+	cgConfig := &kafka.ConsumerGroupConfig{
 		Offset:       &kafkaOffset,
+		BrokerAddrs:  cfg.Brokers,               // compulsory
+		Topic:        cfg.InteractivesReadTopic, // compulsory
+		GroupName:    cfg.InteractivesGroup,     // compulsory
 		KafkaVersion: &cfg.KafkaVersion,
+		NumWorkers:   &cfg.KafkaConsumerWorkers,
 	}
 	if cfg.KafkaSecProtocol == "TLS" {
-		cConfig.SecurityConfig = kafka.GetSecurityConfig(
+		cgConfig.SecurityConfig = kafka.GetSecurityConfig(
 			cfg.KafkaSecCACerts,
 			cfg.KafkaSecClientCert,
 			cfg.KafkaSecClientKey,
@@ -129,16 +131,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafk
 		)
 	}
 
-	cgChannels := kafka.CreateConsumerGroupChannels(cfg.KafkaConsumerWorkers)
-
-	return kafka.NewConsumerGroup(
-		ctx,
-		cfg.Brokers,
-		cfg.InteractivesReadTopic,
-		cfg.InteractivesGroup,
-		cgChannels,
-		cConfig,
-	)
+	return kafka.NewConsumerGroup(ctx, cgConfig)
 }
 
 // DoGetS3Uploaded returns a S3Client
@@ -168,26 +161,13 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
-	//uploadSvcBackend := uploadservice.New(cfg.APIRouterURL)
-
-	//mocked - i got working e2e locally but had to make significant code changes in dp-upload-service
-	uploadSvcBackend := &mocks_importer.UploadServiceBackendMock{
-		CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-			return state.Update(healthcheck.StatusOK, "mocked upload service backend healthy", 0)
-		},
-		UploadFunc: func(ctx context.Context, _ string, job uploadservice.UploadJob) error {
-			logData := log.Data{"job": job}
-			log.Info(ctx, "file uploaded", logData)
-			return nil
-		},
-	}
-
-	return uploadSvcBackend, nil
+	apiClient := upload.NewAPIClient(cfg.APIRouterURL)
+	return apiClient, nil
 }
 
 // DoGetInteractivesApiClient returns an interactives api client
-func (e *Init) DoGetInteractivesAPIClient(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
-	apiClient := interactives.NewWithHealthClient(apiRouter)
+func (e *Init) DoGetInteractivesAPIClient(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
+	apiClient := interactives.NewAPIClient(cfg.APIRouterURL)
 	return apiClient, nil
 }
 

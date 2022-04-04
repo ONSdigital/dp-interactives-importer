@@ -9,7 +9,7 @@ import (
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	"github.com/ONSdigital/dp-interactives-importer/service"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"net/http"
 	"sync"
 )
@@ -33,7 +33,7 @@ var _ service.Initialiser = &InitialiserMock{}
 // 			DoGetHealthClientFunc: func(name string, url string) *health.Client {
 // 				panic("mock out the DoGetHealthClient method")
 // 			},
-// 			DoGetInteractivesAPIClientFunc: func(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
+// 			DoGetInteractivesAPIClientFunc: func(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
 // 				panic("mock out the DoGetInteractivesAPIClient method")
 // 			},
 // 			DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
@@ -62,7 +62,7 @@ type InitialiserMock struct {
 	DoGetHealthClientFunc func(name string, url string) *health.Client
 
 	// DoGetInteractivesAPIClientFunc mocks the DoGetInteractivesAPIClient method.
-	DoGetInteractivesAPIClientFunc func(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error)
+	DoGetInteractivesAPIClientFunc func(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error)
 
 	// DoGetKafkaConsumerFunc mocks the DoGetKafkaConsumer method.
 	DoGetKafkaConsumerFunc func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error)
@@ -104,8 +104,8 @@ type InitialiserMock struct {
 		DoGetInteractivesAPIClient []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// ApiRouter is the apiRouter argument value.
-			ApiRouter *health.Client
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
 		}
 		// DoGetKafkaConsumer holds details about calls to the DoGetKafkaConsumer method.
 		DoGetKafkaConsumer []struct {
@@ -252,33 +252,33 @@ func (mock *InitialiserMock) DoGetHealthClientCalls() []struct {
 }
 
 // DoGetInteractivesAPIClient calls DoGetInteractivesAPIClientFunc.
-func (mock *InitialiserMock) DoGetInteractivesAPIClient(ctx context.Context, apiRouter *health.Client) (importer.InteractivesAPIClient, error) {
+func (mock *InitialiserMock) DoGetInteractivesAPIClient(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
 	if mock.DoGetInteractivesAPIClientFunc == nil {
 		panic("InitialiserMock.DoGetInteractivesAPIClientFunc: method is nil but Initialiser.DoGetInteractivesAPIClient was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
-		ApiRouter *health.Client
+		Ctx context.Context
+		Cfg *config.Config
 	}{
-		Ctx:       ctx,
-		ApiRouter: apiRouter,
+		Ctx: ctx,
+		Cfg: cfg,
 	}
 	mock.lockDoGetInteractivesAPIClient.Lock()
 	mock.calls.DoGetInteractivesAPIClient = append(mock.calls.DoGetInteractivesAPIClient, callInfo)
 	mock.lockDoGetInteractivesAPIClient.Unlock()
-	return mock.DoGetInteractivesAPIClientFunc(ctx, apiRouter)
+	return mock.DoGetInteractivesAPIClientFunc(ctx, cfg)
 }
 
 // DoGetInteractivesAPIClientCalls gets all the calls that were made to DoGetInteractivesAPIClient.
 // Check the length with:
 //     len(mockedInitialiser.DoGetInteractivesAPIClientCalls())
 func (mock *InitialiserMock) DoGetInteractivesAPIClientCalls() []struct {
-	Ctx       context.Context
-	ApiRouter *health.Client
+	Ctx context.Context
+	Cfg *config.Config
 } {
 	var calls []struct {
-		Ctx       context.Context
-		ApiRouter *health.Client
+		Ctx context.Context
+		Cfg *config.Config
 	}
 	mock.lockDoGetInteractivesAPIClient.RLock()
 	calls = mock.calls.DoGetInteractivesAPIClient

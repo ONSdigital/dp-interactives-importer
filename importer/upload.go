@@ -3,12 +3,20 @@ package importer
 import (
 	"context"
 	"fmt"
-	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
-	"os"
+	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const (
+	maxAttempts         = 10
 	uploadRootDirectory = "interactives"
+	DuplicateFileErr    = "already contains a file with this path"
+)
+
+var (
+	versionRegEx = regexp.MustCompile("/version-(\\d+)/")
 )
 
 type Upload struct {
@@ -16,73 +24,62 @@ type Upload struct {
 	TotalChunks, TotalSize                                   int64
 }
 
-func NewUploadService(backend UploadServiceBackend, chunkSize int64) *UploadService {
-	c := chunkSize
-	if c <= 0 {
-		c = DefaultChunkSize
-	}
-
+func NewUploadService(backend UploadServiceBackend) *UploadService {
 	return &UploadService{
-		chunkSize: c,
-		backend:   backend,
+		backend: backend,
 	}
 }
 
 //todo handling retries?
-//todo handle duplicates/replace? - path name convention
 
 type UploadService struct {
-	backend   UploadServiceBackend
-	chunkSize int64
-	Uploads   []Upload //todo get rid of this when integrated into dp-upload-service
+	backend UploadServiceBackend
 }
 
-func (s *UploadService) SendFile(ctx context.Context, f *File, title, collectionId, licence, licenceUrl string) error {
-	path, filename := getPathAndFilename(f.Name, collectionId, 1)
-	uploadFileFunc := func(currentChunk, totalChunks, totalSize int32, mimetype string, tmpFile *os.File) error {
-		req := uploadservice.UploadJob{
-			Path:                 path,
-			ResumableFilename:    filename,
-			IsPublishable:        true, //todo isPublishable==true - assumes all files are publishable - confirm what this means (missing from swagger right now)
-			CollectionId:         collectionId,
-			Title:                title,
-			ResumableTotalSize:   totalSize,
-			ResumableType:        mimetype,
-			Licence:              licence,
-			LicenceUrl:           licenceUrl,
-			ResumableChunkNumber: currentChunk,
-			ResumableTotalChunks: totalChunks,
-			File:                 tmpFile,
-		}
+func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploaded, f *File) (string, error) {
+	metadata := upload.Metadata{
+		IsPublishable: true,
+		Title:         event.Title,
+		FileSizeBytes: f.SizeInBytes,
+		FileType:      f.MimeType,
+		License:       "NA",
+		LicenseURL:    "NA",
+	}
 
-		err := s.backend.Upload(ctx, "", req)
+	version := 1
+	for _, existing := range event.CurrentFiles {
+		if strings.HasSuffix(existing, f.Name) {
+			//file already saved so set base version to this +1
+			re := versionRegEx.FindStringSubmatch(existing)
+			version, _ = strconv.Atoi(re[1])
+			version++
+		}
+	}
+
+	var attempts int
+	for {
+		metadata.Path, metadata.FileName = getPathAndFilename(f.Name, event.ID, version)
+		err := s.backend.Upload(ctx, f.ReadCloser, metadata)
+		if err == nil {
+			break
+		}
 		if err != nil {
-			return err
+			if strings.Contains(err.Error(), DuplicateFileErr) {
+				version++
+				if attempts == maxAttempts {
+					return "", fmt.Errorf("exhausted attempts to upload file %w", err)
+				}
+				attempts++
+			} else {
+				return "", err
+			}
 		}
-
-		return nil
 	}
 
-	totalChunks, err := f.SplitAndClose(s.chunkSize, uploadFileFunc)
-	if err != nil {
-		return err
-	}
-
-	s.Uploads = append(s.Uploads, Upload{
-		Title:        title,
-		CollectionId: collectionId,
-		Path:         path,
-		Filename:     filename,
-		Licence:      licence,
-		LicenceUrl:   licenceUrl,
-		TotalChunks:  totalChunks,
-		TotalSize:    f.SizeInBytes,
-	})
-
-	return nil
+	return fmt.Sprintf("%s/%s", metadata.Path, metadata.FileName), nil
 }
 
 //no leading slash: https://github.com/ONSdigital/dp-upload-service/blob/ecc6062e6fe5856385b5fafbe1105606c1a958ff/api/upload.go#L25
-func getPathAndFilename(filename, collectionId string, version int) (string, string) {
-	return fmt.Sprintf("%s/%s/version-%d", uploadRootDirectory, collectionId, version), filename
+func getPathAndFilename(filename, id string, version int) (string, string) {
+	return fmt.Sprintf("%s/%s/version-%d", uploadRootDirectory, id, version), filename
 }

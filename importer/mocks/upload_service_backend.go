@@ -5,9 +5,9 @@ package mocks_importer
 
 import (
 	"context"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
-	"github.com/ONSdigital/dp-interactives-importer/internal/client/uploadservice"
+	"io"
 	"sync"
 )
 
@@ -21,10 +21,7 @@ var _ importer.UploadServiceBackend = &UploadServiceBackendMock{}
 //
 // 		// make and configure a mocked importer.UploadServiceBackend
 // 		mockedUploadServiceBackend := &UploadServiceBackendMock{
-// 			CheckerFunc: func(ctx context.Context, state *health.CheckState) error {
-// 				panic("mock out the Checker method")
-// 			},
-// 			UploadFunc: func(ctx context.Context, serviceToken string, job uploadservice.UploadJob) error {
+// 			UploadFunc: func(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error {
 // 				panic("mock out the Upload method")
 // 			},
 // 		}
@@ -34,102 +31,56 @@ var _ importer.UploadServiceBackend = &UploadServiceBackendMock{}
 //
 // 	}
 type UploadServiceBackendMock struct {
-	// CheckerFunc mocks the Checker method.
-	CheckerFunc func(ctx context.Context, state *health.CheckState) error
-
 	// UploadFunc mocks the Upload method.
-	UploadFunc func(ctx context.Context, serviceToken string, job uploadservice.UploadJob) error
+	UploadFunc func(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// Checker holds details about calls to the Checker method.
-		Checker []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// State is the state argument value.
-			State *health.CheckState
-		}
 		// Upload holds details about calls to the Upload method.
 		Upload []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// ServiceToken is the serviceToken argument value.
-			ServiceToken string
-			// Job is the job argument value.
-			Job uploadservice.UploadJob
+			// FileContent is the fileContent argument value.
+			FileContent io.ReadCloser
+			// Metadata is the metadata argument value.
+			Metadata upload.Metadata
 		}
 	}
-	lockChecker sync.RWMutex
-	lockUpload  sync.RWMutex
-}
-
-// Checker calls CheckerFunc.
-func (mock *UploadServiceBackendMock) Checker(ctx context.Context, state *health.CheckState) error {
-	if mock.CheckerFunc == nil {
-		panic("UploadServiceBackendMock.CheckerFunc: method is nil but UploadServiceBackend.Checker was just called")
-	}
-	callInfo := struct {
-		Ctx   context.Context
-		State *health.CheckState
-	}{
-		Ctx:   ctx,
-		State: state,
-	}
-	mock.lockChecker.Lock()
-	mock.calls.Checker = append(mock.calls.Checker, callInfo)
-	mock.lockChecker.Unlock()
-	return mock.CheckerFunc(ctx, state)
-}
-
-// CheckerCalls gets all the calls that were made to Checker.
-// Check the length with:
-//     len(mockedUploadServiceBackend.CheckerCalls())
-func (mock *UploadServiceBackendMock) CheckerCalls() []struct {
-	Ctx   context.Context
-	State *health.CheckState
-} {
-	var calls []struct {
-		Ctx   context.Context
-		State *health.CheckState
-	}
-	mock.lockChecker.RLock()
-	calls = mock.calls.Checker
-	mock.lockChecker.RUnlock()
-	return calls
+	lockUpload sync.RWMutex
 }
 
 // Upload calls UploadFunc.
-func (mock *UploadServiceBackendMock) Upload(ctx context.Context, serviceToken string, job uploadservice.UploadJob) error {
+func (mock *UploadServiceBackendMock) Upload(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error {
 	if mock.UploadFunc == nil {
 		panic("UploadServiceBackendMock.UploadFunc: method is nil but UploadServiceBackend.Upload was just called")
 	}
 	callInfo := struct {
-		Ctx          context.Context
-		ServiceToken string
-		Job          uploadservice.UploadJob
+		Ctx         context.Context
+		FileContent io.ReadCloser
+		Metadata    upload.Metadata
 	}{
-		Ctx:          ctx,
-		ServiceToken: serviceToken,
-		Job:          job,
+		Ctx:         ctx,
+		FileContent: fileContent,
+		Metadata:    metadata,
 	}
 	mock.lockUpload.Lock()
 	mock.calls.Upload = append(mock.calls.Upload, callInfo)
 	mock.lockUpload.Unlock()
-	return mock.UploadFunc(ctx, serviceToken, job)
+	return mock.UploadFunc(ctx, fileContent, metadata)
 }
 
 // UploadCalls gets all the calls that were made to Upload.
 // Check the length with:
 //     len(mockedUploadServiceBackend.UploadCalls())
 func (mock *UploadServiceBackendMock) UploadCalls() []struct {
-	Ctx          context.Context
-	ServiceToken string
-	Job          uploadservice.UploadJob
+	Ctx         context.Context
+	FileContent io.ReadCloser
+	Metadata    upload.Metadata
 } {
 	var calls []struct {
-		Ctx          context.Context
-		ServiceToken string
-		Job          uploadservice.UploadJob
+		Ctx         context.Context
+		FileContent io.ReadCloser
+		Metadata    upload.Metadata
 	}
 	mock.lockUpload.RLock()
 	calls = mock.calls.Upload
