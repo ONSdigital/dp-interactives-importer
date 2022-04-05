@@ -161,13 +161,13 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
-	apiClient := upload.NewAPIClient(cfg.APIRouterURL)
+	apiClient := upload.NewAPIClient(cfg.UploadAPIURL)
 	return apiClient, nil
 }
 
 // DoGetInteractivesApiClient returns an interactives api client
 func (e *Init) DoGetInteractivesAPIClient(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
-	apiClient := interactives.NewAPIClient(cfg.APIRouterURL)
+	apiClient := interactives.NewAPIClient(cfg.InteractivesAPIURL)
 	return apiClient, nil
 }
 

@@ -23,8 +23,10 @@ type S3Interface interface {
 
 type UploadServiceBackend interface {
 	Upload(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error
+	Checker(ctx context.Context, state *health.CheckState) error
 }
 
 type InteractivesAPIClient interface {
 	PutInteractive(ctx context.Context, userAuthToken, serviceAuthToken, interactiveID string, update interactives.InteractiveUpdate) error
+	Checker(ctx context.Context, state *health.CheckState) error
 }

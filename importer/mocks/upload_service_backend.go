@@ -6,6 +6,7 @@ package mocks_importer
 import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	"io"
 	"sync"
@@ -21,6 +22,9 @@ var _ importer.UploadServiceBackend = &UploadServiceBackendMock{}
 //
 // 		// make and configure a mocked importer.UploadServiceBackend
 // 		mockedUploadServiceBackend := &UploadServiceBackendMock{
+// 			CheckerFunc: func(ctx context.Context, state *health.CheckState) error {
+// 				panic("mock out the Checker method")
+// 			},
 // 			UploadFunc: func(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error {
 // 				panic("mock out the Upload method")
 // 			},
@@ -31,11 +35,21 @@ var _ importer.UploadServiceBackend = &UploadServiceBackendMock{}
 //
 // 	}
 type UploadServiceBackendMock struct {
+	// CheckerFunc mocks the Checker method.
+	CheckerFunc func(ctx context.Context, state *health.CheckState) error
+
 	// UploadFunc mocks the Upload method.
 	UploadFunc func(ctx context.Context, fileContent io.ReadCloser, metadata upload.Metadata) error
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// Checker holds details about calls to the Checker method.
+		Checker []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// State is the state argument value.
+			State *health.CheckState
+		}
 		// Upload holds details about calls to the Upload method.
 		Upload []struct {
 			// Ctx is the ctx argument value.
@@ -46,7 +60,43 @@ type UploadServiceBackendMock struct {
 			Metadata upload.Metadata
 		}
 	}
-	lockUpload sync.RWMutex
+	lockChecker sync.RWMutex
+	lockUpload  sync.RWMutex
+}
+
+// Checker calls CheckerFunc.
+func (mock *UploadServiceBackendMock) Checker(ctx context.Context, state *health.CheckState) error {
+	if mock.CheckerFunc == nil {
+		panic("UploadServiceBackendMock.CheckerFunc: method is nil but UploadServiceBackend.Checker was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		State *health.CheckState
+	}{
+		Ctx:   ctx,
+		State: state,
+	}
+	mock.lockChecker.Lock()
+	mock.calls.Checker = append(mock.calls.Checker, callInfo)
+	mock.lockChecker.Unlock()
+	return mock.CheckerFunc(ctx, state)
+}
+
+// CheckerCalls gets all the calls that were made to Checker.
+// Check the length with:
+//     len(mockedUploadServiceBackend.CheckerCalls())
+func (mock *UploadServiceBackendMock) CheckerCalls() []struct {
+	Ctx   context.Context
+	State *health.CheckState
+} {
+	var calls []struct {
+		Ctx   context.Context
+		State *health.CheckState
+	}
+	mock.lockChecker.RLock()
+	calls = mock.calls.Checker
+	mock.lockChecker.RUnlock()
+	return calls
 }
 
 // Upload calls UploadFunc.

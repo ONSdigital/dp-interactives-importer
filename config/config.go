@@ -8,7 +8,8 @@ import (
 
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
-	APIRouterURL               string        `envconfig:"API_ROUTER_URL"`
+	UploadAPIURL               string        `envconfig:"UPLOAD_API_URL"`
+	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
 	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN" json:"-"`
 	AwsEndpoint                string        `envconfig:"AWS_ENDPOINT"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
@@ -38,7 +39,8 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   ":27400",
-		APIRouterURL:               "http://localhost:23200/v1",
+		UploadAPIURL:               "http://localhost:25100",
+		InteractivesAPIURL:         "http://localhost:27500/v1",
 		AwsRegion:                  "eu-west-1",
 		DownloadBucketName:         "dp-interactives-file-uploads",
 		Brokers:                    []string{"localhost:9093"},

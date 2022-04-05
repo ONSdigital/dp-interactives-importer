@@ -6,6 +6,7 @@ package mocks_importer
 import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	"sync"
 )
@@ -20,6 +21,9 @@ var _ importer.InteractivesAPIClient = &InteractivesAPIClientMock{}
 //
 // 		// make and configure a mocked importer.InteractivesAPIClient
 // 		mockedInteractivesAPIClient := &InteractivesAPIClientMock{
+// 			CheckerFunc: func(ctx context.Context, state *health.CheckState) error {
+// 				panic("mock out the Checker method")
+// 			},
 // 			PutInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, update interactives.InteractiveUpdate) error {
 // 				panic("mock out the PutInteractive method")
 // 			},
@@ -30,11 +34,21 @@ var _ importer.InteractivesAPIClient = &InteractivesAPIClientMock{}
 //
 // 	}
 type InteractivesAPIClientMock struct {
+	// CheckerFunc mocks the Checker method.
+	CheckerFunc func(ctx context.Context, state *health.CheckState) error
+
 	// PutInteractiveFunc mocks the PutInteractive method.
 	PutInteractiveFunc func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, update interactives.InteractiveUpdate) error
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// Checker holds details about calls to the Checker method.
+		Checker []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// State is the state argument value.
+			State *health.CheckState
+		}
 		// PutInteractive holds details about calls to the PutInteractive method.
 		PutInteractive []struct {
 			// Ctx is the ctx argument value.
@@ -49,7 +63,43 @@ type InteractivesAPIClientMock struct {
 			Update interactives.InteractiveUpdate
 		}
 	}
+	lockChecker        sync.RWMutex
 	lockPutInteractive sync.RWMutex
+}
+
+// Checker calls CheckerFunc.
+func (mock *InteractivesAPIClientMock) Checker(ctx context.Context, state *health.CheckState) error {
+	if mock.CheckerFunc == nil {
+		panic("InteractivesAPIClientMock.CheckerFunc: method is nil but InteractivesAPIClient.Checker was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		State *health.CheckState
+	}{
+		Ctx:   ctx,
+		State: state,
+	}
+	mock.lockChecker.Lock()
+	mock.calls.Checker = append(mock.calls.Checker, callInfo)
+	mock.lockChecker.Unlock()
+	return mock.CheckerFunc(ctx, state)
+}
+
+// CheckerCalls gets all the calls that were made to Checker.
+// Check the length with:
+//     len(mockedInteractivesAPIClient.CheckerCalls())
+func (mock *InteractivesAPIClientMock) CheckerCalls() []struct {
+	Ctx   context.Context
+	State *health.CheckState
+} {
+	var calls []struct {
+		Ctx   context.Context
+		State *health.CheckState
+	}
+	mock.lockChecker.RLock()
+	calls = mock.calls.Checker
+	mock.lockChecker.RUnlock()
+	return calls
 }
 
 // PutInteractive calls PutInteractiveFunc.

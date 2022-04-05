@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/importer"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
@@ -50,7 +49,6 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	uploadService := importer.NewUploadService(uploadServiceBackend)
 
 	// API router & clients
-	APIRouter := health.NewClient("api-router", cfg.APIRouterURL)
 	interactivesAPIClient, err := serviceList.GetInteractivesAPIClient(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise clients via api router", err)
@@ -81,7 +79,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend, APIRouter); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend, interactivesAPIClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -153,7 +151,7 @@ func registerCheckers(ctx context.Context,
 	consumer kafka.IConsumerGroup,
 	s3 importer.S3Interface,
 	uploadServiceBackend importer.UploadServiceBackend,
-	APIRouter *health.Client) (err error) {
+	interactivesAPIClient importer.InteractivesAPIClient) (err error) {
 
 	hasErrors := false
 
@@ -167,9 +165,14 @@ func registerCheckers(ctx context.Context,
 		log.Error(ctx, "error adding check for s3", err)
 	}
 
-	if err = hc.AddCheck("API router", APIRouter.Checker); err != nil {
+	if err = hc.AddCheck("Upload API", uploadServiceBackend.Checker); err != nil {
 		hasErrors = true
-		log.Error(ctx, "failed to add API router health checker", err)
+		log.Error(ctx, "failed to add Upload API health checker", err)
+	}
+
+	if err = hc.AddCheck("Interactives API", interactivesAPIClient.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "failed to add Interactives API health checker", err)
 	}
 
 	if hasErrors {
