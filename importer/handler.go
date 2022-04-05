@@ -87,7 +87,8 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 
 	// Upload each file in zip
 	for _, f := range archive.Files {
-		savedFilename, err := h.UploadService.SendFile(ctx, event, f)
+		var savedFilename string
+		savedFilename, err = h.UploadService.SendFile(ctx, event, f)
 		if err != nil {
 			log.Error(ctx, "failed to upload file", err, log.Data{"file": f})
 			return err
