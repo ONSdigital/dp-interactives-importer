@@ -167,7 +167,7 @@ func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config
 
 // DoGetInteractivesApiClient returns an interactives api client
 func (e *Init) DoGetInteractivesAPIClient(ctx context.Context, cfg *config.Config) (importer.InteractivesAPIClient, error) {
-	apiClient := interactives.NewAPIClient(cfg.InteractivesAPIURL)
+	apiClient := interactives.NewAPIClient(cfg.InteractivesAPIURL, "v1")
 	return apiClient, nil
 }
 
