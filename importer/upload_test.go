@@ -46,6 +46,22 @@ func TestUploadService(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(f, ShouldEqual, "interactives/id/version-1/root/dir/testing.css")
 			})
+
+			Convey("Then there should be no error when we send the file and the event has some existing files", func() {
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f)
+
+				So(err, ShouldBeNil)
+				So(f, ShouldEqual, "interactives/id/version-3/root/dir/testing.css")
+				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
+			})
+
+			Convey("Then there should be no error when we send the file and the event has some existing files without versioned path", func() {
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/root/dir/testing.css"), f)
+
+				So(err, ShouldBeNil)
+				So(f, ShouldEqual, "interactives/id/version-1/root/dir/testing.css")
+				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
+			})
 		})
 
 		Convey("And an upload service backend that fails on upload", func() {
@@ -76,12 +92,12 @@ func TestUploadService(t *testing.T) {
 			}
 			svc := importer.NewUploadService(mockBackend)
 
-			Convey("Then there should be no error after attempting with different version", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f)
+			Convey("Then there should be no error after attempting with valid version", func() {
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
 
 				So(err, ShouldBeNil)
 				So(f, ShouldEqual, "interactives/id/version-3/root/dir/testing.css")
-				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
+				So(len(mockBackend.UploadCalls()), ShouldEqual, 3)
 			})
 		})
 	})

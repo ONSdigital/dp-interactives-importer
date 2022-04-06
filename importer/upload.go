@@ -19,11 +19,6 @@ var (
 	versionRegEx = regexp.MustCompile("/version-(\\d+)/")
 )
 
-type Upload struct {
-	Title, CollectionId, Path, Filename, Licence, LicenceUrl string
-	TotalChunks, TotalSize                                   int64
-}
-
 func NewUploadService(backend UploadServiceBackend) *UploadService {
 	return &UploadService{
 		backend: backend,
@@ -42,8 +37,8 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 		Title:         event.Title,
 		FileSizeBytes: f.SizeInBytes,
 		FileType:      f.MimeType,
-		License:       "NA",
-		LicenseURL:    "NA",
+		License:       "TODO",
+		LicenseURL:    "TODO",
 	}
 
 	version := 1
@@ -51,8 +46,10 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 		if strings.HasSuffix(existing, f.Name) {
 			//file already saved so set base version to this +1
 			re := versionRegEx.FindStringSubmatch(existing)
-			version, _ = strconv.Atoi(re[1])
-			version++
+			if re != nil {
+				version, _ = strconv.Atoi(re[1])
+				version++
+			}
 		}
 	}
 

@@ -5,7 +5,6 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	s3client "github.com/ONSdigital/dp-s3"
 	"io"
 )
 
@@ -15,9 +14,6 @@ import (
 
 type S3Interface interface {
 	Get(key string) (io.ReadCloser, *int64, error)
-	//todo drop below
-	UploadPart(ctx context.Context, req *s3client.UploadPartRequest, payload []byte) error
-	CheckPartUploaded(ctx context.Context, req *s3client.UploadPartRequest) (bool, error)
 	Checker(ctx context.Context, state *health.CheckState) error
 }
 
