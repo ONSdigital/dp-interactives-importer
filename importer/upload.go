@@ -62,16 +62,15 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 		if err == nil {
 			break
 		}
-		if err != nil {
-			if strings.Contains(err.Error(), DuplicateFileErr) {
-				version++
-				if attempts == maxAttempts {
-					return "", fmt.Errorf("exhausted attempts to upload file %w", err)
-				}
-				attempts++
-			} else {
-				return "", err
+
+		if strings.Contains(err.Error(), DuplicateFileErr) {
+			version++
+			if attempts == maxAttempts {
+				return "", fmt.Errorf("exhausted attempts to upload file %w", err)
 			}
+			attempts++
+		} else {
+			return "", err
 		}
 	}
 

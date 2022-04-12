@@ -161,7 +161,7 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
-	apiClient := upload.NewAPIClient(cfg.UploadAPIURL)
+	apiClient := upload.NewAPIClient(cfg.UploadAPIURL, cfg.ServiceAuthToken)
 	return apiClient, nil
 }
 
