@@ -13,6 +13,8 @@ const (
 	maxAttempts         = 10
 	uploadRootDirectory = "interactives"
 	DuplicateFileErr    = "already contains a file with this path"
+	licenseName         = "Open Government Licence v3.0"
+	licenseURL          = "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
 )
 
 var (
@@ -37,8 +39,8 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 		Title:         event.Title,
 		FileSizeBytes: f.SizeInBytes,
 		FileType:      f.MimeType,
-		License:       "TODO",
-		LicenseURL:    "TODO",
+		License:       licenseName,
+		LicenseURL:    licenseURL,
 	}
 
 	version := 1
