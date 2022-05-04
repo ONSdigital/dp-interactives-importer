@@ -10,10 +10,6 @@ import (
 	"io"
 )
 
-var (
-	successful, failure = true, false
-)
-
 type InteractivesUploadedHandler struct {
 	Cfg                   *config.Config
 	S3                    S3Interface
@@ -36,7 +32,8 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 
 	// Defer an update via API - deferred so we always attempt an update!
 	defer func() {
-		update := interactives.InteractiveUpdate{
+		patchReq := interactives.PatchRequest{
+			Action: interactives.PatchImportArchive,
 			Interactive: interactives.Interactive{
 				ID: event.ID,
 				Archive: &interactives.InteractiveArchive{
@@ -46,15 +43,15 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		}
 		if err != nil {
 			logData["error"] = err.Error()
-			update.ImportSuccessful = &failure
-			update.ImportMessage = err.Error()
+			patchReq.Successful = false
+			patchReq.Message = err.Error()
 		} else {
-			update.ImportSuccessful = &successful
-			update.Interactive.Archive.Size = *zipSize
-			update.Interactive.Archive.Files = archiveFiles
+			patchReq.Successful = true
+			patchReq.Interactive.Archive.Size = *zipSize
+			patchReq.Interactive.Archive.Files = archiveFiles
 		}
 		// user token not valid - we auth user on api endpoints
-		apiErr := h.InteractivesAPIClient.PutInteractive(ctx, "", h.Cfg.ServiceAuthToken, event.ID, update)
+		_, apiErr := h.InteractivesAPIClient.PatchInteractive(ctx, "", h.Cfg.ServiceAuthToken, event.ID, patchReq)
 		if apiErr != nil {
 			//todo what if this fails - retry?
 			logData["apiError"] = apiErr.Error()

@@ -24,8 +24,8 @@ var _ importer.InteractivesAPIClient = &InteractivesAPIClientMock{}
 // 			CheckerFunc: func(ctx context.Context, state *health.CheckState) error {
 // 				panic("mock out the Checker method")
 // 			},
-// 			PutInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, update interactives.InteractiveUpdate) error {
-// 				panic("mock out the PutInteractive method")
+// 			PatchInteractiveFunc: func(contextMoqParam context.Context, s1 string, s2 string, s3 string, patchRequest interactives.PatchRequest) (interactives.Interactive, error) {
+// 				panic("mock out the PatchInteractive method")
 // 			},
 // 		}
 //
@@ -37,8 +37,8 @@ type InteractivesAPIClientMock struct {
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(ctx context.Context, state *health.CheckState) error
 
-	// PutInteractiveFunc mocks the PutInteractive method.
-	PutInteractiveFunc func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, update interactives.InteractiveUpdate) error
+	// PatchInteractiveFunc mocks the PatchInteractive method.
+	PatchInteractiveFunc func(contextMoqParam context.Context, s1 string, s2 string, s3 string, patchRequest interactives.PatchRequest) (interactives.Interactive, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -49,22 +49,22 @@ type InteractivesAPIClientMock struct {
 			// State is the state argument value.
 			State *health.CheckState
 		}
-		// PutInteractive holds details about calls to the PutInteractive method.
-		PutInteractive []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// UserAuthToken is the userAuthToken argument value.
-			UserAuthToken string
-			// ServiceAuthToken is the serviceAuthToken argument value.
-			ServiceAuthToken string
-			// InteractiveID is the interactiveID argument value.
-			InteractiveID string
-			// Update is the update argument value.
-			Update interactives.InteractiveUpdate
+		// PatchInteractive holds details about calls to the PatchInteractive method.
+		PatchInteractive []struct {
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+			// S1 is the s1 argument value.
+			S1 string
+			// S2 is the s2 argument value.
+			S2 string
+			// S3 is the s3 argument value.
+			S3 string
+			// PatchRequest is the patchRequest argument value.
+			PatchRequest interactives.PatchRequest
 		}
 	}
-	lockChecker        sync.RWMutex
-	lockPutInteractive sync.RWMutex
+	lockChecker          sync.RWMutex
+	lockPatchInteractive sync.RWMutex
 }
 
 // Checker calls CheckerFunc.
@@ -102,49 +102,49 @@ func (mock *InteractivesAPIClientMock) CheckerCalls() []struct {
 	return calls
 }
 
-// PutInteractive calls PutInteractiveFunc.
-func (mock *InteractivesAPIClientMock) PutInteractive(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, update interactives.InteractiveUpdate) error {
-	if mock.PutInteractiveFunc == nil {
-		panic("InteractivesAPIClientMock.PutInteractiveFunc: method is nil but InteractivesAPIClient.PutInteractive was just called")
+// PatchInteractive calls PatchInteractiveFunc.
+func (mock *InteractivesAPIClientMock) PatchInteractive(contextMoqParam context.Context, s1 string, s2 string, s3 string, patchRequest interactives.PatchRequest) (interactives.Interactive, error) {
+	if mock.PatchInteractiveFunc == nil {
+		panic("InteractivesAPIClientMock.PatchInteractiveFunc: method is nil but InteractivesAPIClient.PatchInteractive was just called")
 	}
 	callInfo := struct {
-		Ctx              context.Context
-		UserAuthToken    string
-		ServiceAuthToken string
-		InteractiveID    string
-		Update           interactives.InteractiveUpdate
+		ContextMoqParam context.Context
+		S1              string
+		S2              string
+		S3              string
+		PatchRequest    interactives.PatchRequest
 	}{
-		Ctx:              ctx,
-		UserAuthToken:    userAuthToken,
-		ServiceAuthToken: serviceAuthToken,
-		InteractiveID:    interactiveID,
-		Update:           update,
+		ContextMoqParam: contextMoqParam,
+		S1:              s1,
+		S2:              s2,
+		S3:              s3,
+		PatchRequest:    patchRequest,
 	}
-	mock.lockPutInteractive.Lock()
-	mock.calls.PutInteractive = append(mock.calls.PutInteractive, callInfo)
-	mock.lockPutInteractive.Unlock()
-	return mock.PutInteractiveFunc(ctx, userAuthToken, serviceAuthToken, interactiveID, update)
+	mock.lockPatchInteractive.Lock()
+	mock.calls.PatchInteractive = append(mock.calls.PatchInteractive, callInfo)
+	mock.lockPatchInteractive.Unlock()
+	return mock.PatchInteractiveFunc(contextMoqParam, s1, s2, s3, patchRequest)
 }
 
-// PutInteractiveCalls gets all the calls that were made to PutInteractive.
+// PatchInteractiveCalls gets all the calls that were made to PatchInteractive.
 // Check the length with:
-//     len(mockedInteractivesAPIClient.PutInteractiveCalls())
-func (mock *InteractivesAPIClientMock) PutInteractiveCalls() []struct {
-	Ctx              context.Context
-	UserAuthToken    string
-	ServiceAuthToken string
-	InteractiveID    string
-	Update           interactives.InteractiveUpdate
+//     len(mockedInteractivesAPIClient.PatchInteractiveCalls())
+func (mock *InteractivesAPIClientMock) PatchInteractiveCalls() []struct {
+	ContextMoqParam context.Context
+	S1              string
+	S2              string
+	S3              string
+	PatchRequest    interactives.PatchRequest
 } {
 	var calls []struct {
-		Ctx              context.Context
-		UserAuthToken    string
-		ServiceAuthToken string
-		InteractiveID    string
-		Update           interactives.InteractiveUpdate
+		ContextMoqParam context.Context
+		S1              string
+		S2              string
+		S3              string
+		PatchRequest    interactives.PatchRequest
 	}
-	mock.lockPutInteractive.RLock()
-	calls = mock.calls.PutInteractive
-	mock.lockPutInteractive.RUnlock()
+	mock.lockPatchInteractive.RLock()
+	calls = mock.calls.PatchInteractive
+	mock.lockPatchInteractive.RUnlock()
 	return calls
 }

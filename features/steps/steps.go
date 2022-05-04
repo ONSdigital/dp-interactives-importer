@@ -96,20 +96,20 @@ func (c *Component) interactivesShouldBeUploadedViaTheUploadService(count int) e
 }
 
 func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(id string) error {
-	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PutInteractiveCalls()))
-	firstCall := c.InteractivesAPI.PutInteractiveCalls()[0]
-	assert.Equal(&c.ErrorFeature, id, firstCall.InteractiveID)
-	assert.Equal(&c.ErrorFeature, id, firstCall.Update.Interactive.ID)
-	assert.True(&c.ErrorFeature, *firstCall.Update.ImportSuccessful)
+	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PatchInteractiveCalls()))
+	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
+	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
+	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
+	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Successful)
 	return c.ErrorFeature.StepError()
 }
 
 func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI(id string) error {
-	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PutInteractiveCalls()))
-	firstCall := c.InteractivesAPI.PutInteractiveCalls()[0]
-	assert.Equal(&c.ErrorFeature, id, firstCall.InteractiveID)
-	assert.Equal(&c.ErrorFeature, id, firstCall.Update.Interactive.ID)
-	assert.NotEmpty(&c.ErrorFeature, firstCall.Update.ImportMessage)
-	assert.False(&c.ErrorFeature, *firstCall.Update.ImportSuccessful)
+	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PatchInteractiveCalls()))
+	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
+	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
+	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
+	assert.NotEmpty(&c.ErrorFeature, firstCall.PatchRequest.Message)
+	assert.False(&c.ErrorFeature, firstCall.PatchRequest.Successful)
 	return c.ErrorFeature.StepError()
 }

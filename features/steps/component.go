@@ -101,8 +101,8 @@ func NewInteractivesImporterComponent() (*Component, error) {
 	}
 
 	c.InteractivesAPI = &mocks_importer.InteractivesAPIClientMock{
-		PutInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, metadata interactives.InteractiveUpdate) error {
-			return nil
+		PatchInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, req interactives.PatchRequest) (interactives.Interactive, error) {
+			return interactives.Interactive{}, nil
 		},
 	}
 
