@@ -33,7 +33,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 	// Defer an update via API - deferred so we always attempt an update!
 	defer func() {
 		patchReq := interactives.PatchRequest{
-			Action: interactives.PatchImportArchive,
+			Attribute: interactives.PatchArchive,
 			Interactive: interactives.Interactive{
 				ID: event.ID,
 				Archive: &interactives.InteractiveArchive{
@@ -43,10 +43,9 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		}
 		if err != nil {
 			logData["error"] = err.Error()
-			patchReq.Successful = false
-			patchReq.Message = err.Error()
+			patchReq.Interactive.Archive.ImportMessage = err.Error()
 		} else {
-			patchReq.Successful = true
+			patchReq.Interactive.Archive.ImportSuccessful = true
 			patchReq.Interactive.Archive.Size = *zipSize
 			patchReq.Interactive.Archive.Files = archiveFiles
 		}
