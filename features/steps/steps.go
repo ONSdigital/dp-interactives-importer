@@ -100,7 +100,7 @@ func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(
 	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
 	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
-	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Successful)
+	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportSuccessful)
 	return c.ErrorFeature.StepError()
 }
 
@@ -109,7 +109,7 @@ func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI(id
 	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
 	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
-	assert.NotEmpty(&c.ErrorFeature, firstCall.PatchRequest.Message)
-	assert.False(&c.ErrorFeature, firstCall.PatchRequest.Successful)
+	assert.NotEmpty(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportMessage)
+	assert.False(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportSuccessful)
 	return c.ErrorFeature.StepError()
 }
