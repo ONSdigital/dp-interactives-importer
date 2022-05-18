@@ -1,0 +1,184 @@
+id,name,eu_row_split
+c0,Total service imports,0.479
+c1,Total service imports,0.490
+c1_1,Primary and utilities,0.867
+c1_10,Real estate activities,1.000
+c1_11,"Professional, scientific and technical activities",0.307
+c1_12,Administrative and support service activities,0.593
+c1_13,Other service industries,0.280
+c1_14,Travel-related trade,0.611
+c1_2,Manufacturing,0.330
+c1_3,Construction,0.787
+c1_4,Wholesale and motor trades,0.461
+c1_5,Retail excluding motor trades,0.500
+c1_6,Transportation and storage,0.595
+c1_7,Accommodation and food service activities,0.231
+c1_8,Information and communication,0.489
+c1_9,Financial and insurance activities,0.328
+c10,Total service imports,0.532
+c10_1,Primary and utilities,0.735
+c10_10,Real estate activities,0.000
+c10_11,"Professional, scientific and technical activities",0.000
+c10_12,Administrative and support service activities,0.667
+c10_13,Other service industries,0.000
+c10_14,Travel-related trade,0.612
+c10_15,Total suppressed values in this area,0.343
+c10_2,Manufacturing,0.579
+c10_3,Construction,0.622
+c10_4,Wholesale and motor trades,0.000
+c10_5,Retail excluding motor trades,0.000
+c10_6,Transportation and storage,0.578
+c10_7,Accommodation and food service activities,0.000
+c10_8,Information and communication,0.636
+c10_9,Financial and insurance activities,0.000
+c11,Total service imports,0.434
+c11_1,Primary and utilities,0.417
+c11_10,Real estate activities,0.667
+c11_11,"Professional, scientific and technical activities",0.229
+c11_12,Administrative and support service activities,0.610
+c11_13,Other service industries,0.219
+c11_14,Travel-related trade,0.612
+c11_2,Manufacturing,0.440
+c11_3,Construction,0.570
+c11_4,Wholesale and motor trades,0.552
+c11_5,Retail excluding motor trades,0.457
+c11_6,Transportation and storage,0.576
+c11_7,Accommodation and food service activities,0.431
+c11_8,Information and communication,0.372
+c11_9,Financial and insurance activities,0.288
+c12,Total service imports,0.616
+c12_1,Primary and utilities,0.591
+c12_10,Real estate activities,0.000
+c12_11,"Professional, scientific and technical activities",0.000
+c12_12,Administrative and support service activities,0.512
+c12_13,Other service industries,0.000
+c12_14,Travel-related trade,0.611
+c12_15,Total suppressed values in this area,0.696
+c12_2,Manufacturing,0.716
+c12_3,Construction,0.838
+c12_4,Wholesale and motor trades,0.000
+c12_5,Retail excluding motor trades,0.000
+c12_6,Transportation and storage,0.555
+c12_7,Accommodation and food service activities,0.000
+c12_8,Information and communication,0.387
+c12_9,Financial and insurance activities,0.000
+c2,Total service imports,0.548
+c2_1,Primary and utilities,0.856
+c2_10,Real estate activities,0.857
+c2_11,"Professional, scientific and technical activities",0.501
+c2_12,Administrative and support service activities,0.612
+c2_13,Other service industries,0.418
+c2_14,Travel-related trade,0.612
+c2_2,Manufacturing,0.661
+c2_3,Construction,0.622
+c2_4,Wholesale and motor trades,0.708
+c2_5,Retail excluding motor trades,0.414
+c2_6,Transportation and storage,0.591
+c2_7,Accommodation and food service activities,0.314
+c2_8,Information and communication,0.490
+c2_9,Financial and insurance activities,0.318
+c3,Total service imports,0.521
+c3_1,Primary and utilities,0.794
+c3_10,Real estate activities,0.800
+c3_11,"Professional, scientific and technical activities",0.539
+c3_12,Administrative and support service activities,0.608
+c3_13,Other service industries,0.217
+c3_14,Travel-related trade,0.612
+c3_2,Manufacturing,0.698
+c3_3,Construction,0.613
+c3_4,Wholesale and motor trades,0.555
+c3_5,Retail excluding motor trades,0.372
+c3_6,Transportation and storage,0.586
+c3_7,Accommodation and food service activities,0.350
+c3_8,Information and communication,0.600
+c3_9,Financial and insurance activities,0.324
+c4,Total service imports,0.551
+c4_1,Primary and utilities,0.719
+c4_10,Real estate activities,0.500
+c4_11,"Professional, scientific and technical activities",0.667
+c4_12,Administrative and support service activities,0.653
+c4_13,Other service industries,0.228
+c4_14,Travel-related trade,0.612
+c4_2,Manufacturing,0.552
+c4_3,Construction,0.641
+c4_4,Wholesale and motor trades,0.644
+c4_5,Retail excluding motor trades,0.450
+c4_6,Transportation and storage,0.579
+c4_7,Accommodation and food service activities,0.200
+c4_8,Information and communication,0.512
+c4_9,Financial and insurance activities,0.343
+c5,Total service imports,0.534
+c5_1,Primary and utilities,0.645
+c5_10,Real estate activities,0.800
+c5_11,"Professional, scientific and technical activities",0.563
+c5_12,Administrative and support service activities,0.622
+c5_13,Other service industries,0.238
+c5_14,Travel-related trade,0.612
+c5_2,Manufacturing,0.711
+c5_3,Construction,0.691
+c5_4,Wholesale and motor trades,0.517
+c5_5,Retail excluding motor trades,0.456
+c5_6,Transportation and storage,0.584
+c5_7,Accommodation and food service activities,0.409
+c5_8,Information and communication,0.439
+c5_9,Financial and insurance activities,0.324
+c6,Total service imports,0.500
+c6_1,Primary and utilities,0.731
+c6_10,Real estate activities,0.000
+c6_11,"Professional, scientific and technical activities",0.287
+c6_12,Administrative and support service activities,0.703
+c6_13,Other service industries,0.277
+c6_14,Travel-related trade,0.612
+c6_2,Manufacturing,0.393
+c6_3,Construction,0.698
+c6_4,Wholesale and motor trades,0.642
+c6_5,Retail excluding motor trades,0.516
+c6_6,Transportation and storage,0.579
+c6_7,Accommodation and food service activities,0.000
+c6_8,Information and communication,0.544
+c6_9,Financial and insurance activities,0.000
+c7,Total service imports,0.426
+c7_1,Primary and utilities,0.758
+c7_10,Real estate activities,0.559
+c7_11,"Professional, scientific and technical activities",0.359
+c7_12,Administrative and support service activities,0.528
+c7_13,Other service industries,0.282
+c7_14,Travel-related trade,0.612
+c7_2,Manufacturing,0.649
+c7_3,Construction,0.769
+c7_4,Wholesale and motor trades,0.460
+c7_5,Retail excluding motor trades,0.453
+c7_6,Transportation and storage,0.608
+c7_7,Accommodation and food service activities,0.516
+c7_8,Information and communication,0.376
+c7_9,Financial and insurance activities,0.281
+c8,Total service imports,0.480
+c8_1,Primary and utilities,0.850
+c8_10,Real estate activities,0.900
+c8_11,"Professional, scientific and technical activities",0.296
+c8_12,Administrative and support service activities,0.601
+c8_13,Other service industries,0.290
+c8_14,Travel-related trade,0.612
+c8_2,Manufacturing,0.427
+c8_3,Construction,0.714
+c8_4,Wholesale and motor trades,0.532
+c8_5,Retail excluding motor trades,0.458
+c8_6,Transportation and storage,0.581
+c8_7,Accommodation and food service activities,0.263
+c8_8,Information and communication,0.440
+c8_9,Financial and insurance activities,0.326
+c9,Total service imports,0.503
+c9_1,Primary and utilities,0.849
+c9_10,Real estate activities,0.714
+c9_11,"Professional, scientific and technical activities",0.381
+c9_12,Administrative and support service activities,0.644
+c9_13,Other service industries,0.234
+c9_14,Travel-related trade,0.612
+c9_2,Manufacturing,0.436
+c9_3,Construction,0.570
+c9_4,Wholesale and motor trades,0.431
+c9_5,Retail excluding motor trades,0.456
+c9_6,Transportation and storage,0.583
+c9_7,Accommodation and food service activities,0.444
+c9_8,Information and communication,0.582
+c9_9,Financial and insurance activities,0.336
