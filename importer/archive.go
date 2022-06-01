@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ErrNoIndexHtml          = errors.New("interactive must contain 1 index.html (in root folder)")
+	ErrNoIndexHtml          = errors.New("interactive must contain 1 index.html in root folder")
 	ErrMoreThanOneIndexHtml = errors.New("there can only be 1 index.html in an interactive")
 	fileMatchersToIgnore    = []matcher{
 		//hidden files
