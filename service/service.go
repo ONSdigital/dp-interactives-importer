@@ -26,21 +26,19 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	r := mux.NewRouter()
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
-	// Get Kafka
+	// Setup downstream dependencies
 	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
 		return nil, err
 	}
 
-	// Get S3Uploaded client
 	s3Client, err := serviceList.GetS3Client(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise S3 client for uploaded bucket", err)
 		return nil, err
 	}
 
-	// Get upload service backend
 	uploadServiceBackend, err := serviceList.GetUploadServiceBackend(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise upload service", err)
@@ -48,10 +46,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 	uploadService := importer.NewUploadService(uploadServiceBackend)
 
-	// API router & clients
 	interactivesAPIClient, err := serviceList.GetInteractivesAPIClient(ctx, cfg)
 	if err != nil {
-		log.Fatal(ctx, "failed to initialise clients via api router", err)
+		log.Fatal(ctx, "failed to initialise interactives api", err)
 		return nil, err
 	}
 
@@ -79,7 +76,8 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
-	if err := registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend, interactivesAPIClient); err != nil {
+	err = registerCheckers(ctx, cfg, hc, consumer, s3Client, uploadServiceBackend, interactivesAPIClient)
+	if err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 

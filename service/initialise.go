@@ -161,6 +161,15 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
+	//apiClient := &mocks_importer.UploadServiceBackendMock{
+	//	UploadFunc: func(context.Context, io.ReadCloser, upload.Metadata) error {
+	//		return nil
+	//	},
+	//	CheckerFunc: func(_ context.Context, _ *healthcheck.CheckState) error {
+	//		return nil
+	//	},
+	//}
+
 	apiClient := upload.NewAPIClient(cfg.UploadAPIURL, cfg.ServiceAuthToken)
 	return apiClient, nil
 }
