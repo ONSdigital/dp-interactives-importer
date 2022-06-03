@@ -8,7 +8,6 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/log.go/v2/log"
 	"io"
-	"strings"
 )
 
 type InteractivesUploadedHandler struct {
@@ -90,13 +89,11 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 			log.Error(ctx, "failed to upload file", err, log.Data{"file": f})
 			return err
 		}
-		//zip files always include zip name at root: e.g. archive.zip ->unzips to-> /archive/file.txt
-		uri := f.Name[strings.Index(f.Name, "/")+1:] //this could be rendered from http://domain/interactives/uri
 		archiveFiles = append(archiveFiles, &interactives.InteractiveFile{
 			Name:     savedFilename,
 			Mimetype: f.MimeType,
 			Size:     f.SizeInBytes,
-			URI:      uri,
+			URI:      f.Name, //this could be rendered from http://domain/interactives/uri
 		})
 	}
 

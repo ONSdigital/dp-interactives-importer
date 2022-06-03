@@ -18,7 +18,10 @@ import (
 
 var (
 	//go:embed test/single-interactive.zip
-	zipFile embed.FS
+	validZipFile embed.FS
+
+	//go:embed test/dvc1774.zip
+	invalidZipFile embed.FS
 )
 
 func TestArchive(t *testing.T) {
@@ -35,6 +38,26 @@ func TestArchive(t *testing.T) {
 			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
 			err = a.OpenAndValidate()
 			So(err, ShouldBeError, zip.ErrFormat)
+		})
+	})
+
+	Convey("Given a valid zip file", t, func() {
+		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js", "index.html")
+		defer os.Remove(archiveName)
+		So(err, ShouldBeNil)
+		So(archiveName, ShouldNotBeEmpty)
+
+		Convey("Then open should run successfully", func() {
+			archive, err := os.Open(archiveName)
+			So(err, ShouldBeNil)
+
+			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
+			err = a.OpenAndValidate()
+			So(err, ShouldBeNil)
+
+			Convey("And files in archive should be 4", func() {
+				So(len(a.Files), ShouldEqual, 4)
+			})
 		})
 	})
 
@@ -70,39 +93,25 @@ func TestArchive(t *testing.T) {
 		})
 	})
 
-	Convey("Given an invalid zip file (index.html not in root)", t, func() {
-		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js", "test/index.html")
-		defer os.Remove(archiveName)
+	Convey("Given an actual valid zip file", t, func() {
+		rc, err := validZipFile.Open("test/single-interactive.zip")
 		So(err, ShouldBeNil)
-		So(archiveName, ShouldNotBeEmpty)
 
 		Convey("Then open should run successfully", func() {
-			archive, err := os.Open(archiveName)
-			So(err, ShouldBeNil)
-
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
+			a := &importer.Archive{Context: context.TODO(), ReadCloser: rc}
 			err = a.OpenAndValidate()
-			So(err, ShouldEqual, importer.ErrNoIndexHtml)
+			So(err, ShouldBeNil)
 		})
 	})
 
-	Convey("Given a valid zip file", t, func() {
-		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js", "index.html")
-		defer os.Remove(archiveName)
+	Convey("Given an actual invalid zip file", t, func() {
+		rc, err := invalidZipFile.Open("test/dvc1774.zip")
 		So(err, ShouldBeNil)
-		So(archiveName, ShouldNotBeEmpty)
 
-		Convey("Then open should run successfully", func() {
-			archive, err := os.Open(archiveName)
-			So(err, ShouldBeNil)
-
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
+		Convey("Then open should error", func() {
+			a := &importer.Archive{Context: context.TODO(), ReadCloser: rc}
 			err = a.OpenAndValidate()
-			So(err, ShouldBeNil)
-
-			Convey("And files in archive should be 4", func() {
-				So(len(a.Files), ShouldEqual, 4)
-			})
+			So(err, ShouldEqual, importer.ErrNoIndexHtml)
 		})
 	})
 }
@@ -111,7 +120,7 @@ func TestMimeType(t *testing.T) {
 
 	Convey("Given a zip file with some interactives files", t, func() {
 
-		raw, err := zipFile.ReadFile("test/single-interactive.zip")
+		raw, err := validZipFile.ReadFile("test/single-interactive.zip")
 		So(err, ShouldBeNil)
 
 		zipReader, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
@@ -120,17 +129,17 @@ func TestMimeType(t *testing.T) {
 		Convey("Then each file should match expected mimetype", func() {
 
 			expectedMimeTypes := map[string]string{
-				"single-interactive/index.html":                              "text/html; charset=utf-8",
-				"single-interactive/config.json":                             "application/json",
-				"single-interactive/exports.csv":                             "text/csv; charset=utf-8",
-				"single-interactive/trade_exports.csv":                       "text/csv; charset=utf-8",
-				"single-interactive/css/chosen.css":                          "text/css; charset=utf-8",
-				"single-interactive/css/styles.css":                          "text/css; charset=utf-8",
-				"single-interactive/js/base.js":                              "application/javascript",
-				"single-interactive/js/chosen.jquery.js":                     "application/javascript",
-				"single-interactive/js/DataStructures.Tree.js":               "application/javascript",
-				"single-interactive/js/modernizr.custom.56904.js":            "application/javascript",
-				"single-interactive/fonts/glyphicons-halflings-regular.woff": "font/woff",
+				"index.html":                              "text/html; charset=utf-8",
+				"config.json":                             "application/json",
+				"exports.csv":                             "text/csv; charset=utf-8",
+				"trade_exports.csv":                       "text/csv; charset=utf-8",
+				"css/chosen.css":                          "text/css; charset=utf-8",
+				"css/styles.css":                          "text/css; charset=utf-8",
+				"js/base.js":                              "application/javascript",
+				"js/chosen.jquery.js":                     "application/javascript",
+				"js/DataStructures.Tree.js":               "application/javascript",
+				"js/modernizr.custom.56904.js":            "application/javascript",
+				"fonts/glyphicons-halflings-regular.woff": "font/woff",
 			}
 
 			var count int
