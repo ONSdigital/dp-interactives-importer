@@ -44,14 +44,14 @@ func TestUploadService(t *testing.T) {
 				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-1/root/dir/testing.css")
+				So(f, ShouldEqual, "interactives/collection_id/id/version-1/root/dir/testing.css")
 			})
 
 			Convey("Then there should be no error when we send the file and the event has some existing files", func() {
 				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-3/root/dir/testing.css")
+				So(f, ShouldEqual, "interactives/collection_id/id/version-3/root/dir/testing.css")
 				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
 			})
 
@@ -59,7 +59,7 @@ func TestUploadService(t *testing.T) {
 				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/root/dir/testing.css"), f)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-1/root/dir/testing.css")
+				So(f, ShouldEqual, "interactives/collection_id/id/version-1/root/dir/testing.css")
 				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
 			})
 		})
@@ -96,7 +96,7 @@ func TestUploadService(t *testing.T) {
 				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-3/root/dir/testing.css")
+				So(f, ShouldEqual, "interactives/collection_id/id/version-3/root/dir/testing.css")
 				So(len(mockBackend.UploadCalls()), ShouldEqual, 3)
 			})
 		})
@@ -108,6 +108,7 @@ func getTestEvent(filename string, in ...string) *importer.InteractivesUploaded 
 	existing = append(existing, in...)
 
 	return &importer.InteractivesUploaded{
+		CollectionID: "collection_id",
 		ID:           "id",
 		Path:         filename,
 		Title:        "title",

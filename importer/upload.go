@@ -57,7 +57,7 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 
 	var attempts int
 	for {
-		metadata.Path, metadata.FileName = getPathAndFilename(f.Name, event.ID, version)
+		metadata.Path, metadata.FileName = getPathAndFilename(event.CollectionID, f.Name, event.ID, version)
 		err := s.backend.Upload(ctx, f.ReadCloser, metadata)
 		if err == nil {
 			break
@@ -78,6 +78,6 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 }
 
 //no leading slash: https://github.com/ONSdigital/dp-upload-service/blob/ecc6062e6fe5856385b5fafbe1105606c1a958ff/api/upload.go#L25
-func getPathAndFilename(filename, id string, version int) (string, string) {
-	return fmt.Sprintf("%s/%s/version-%d", uploadRootDirectory, id, version), filename
+func getPathAndFilename(collectionId, filename, id string, version int) (string, string) {
+	return fmt.Sprintf("%s/%s/%s/version-%d", uploadRootDirectory, collectionId, id, version), filename
 }

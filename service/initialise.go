@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
+	mocks_importer "github.com/ONSdigital/dp-interactives-importer/importer/mocks"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"io"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
@@ -161,16 +163,16 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 
 // DoGetUploadServiceBackend returns an upload service backend
 func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config) (importer.UploadServiceBackend, error) {
-	//apiClient := &mocks_importer.UploadServiceBackendMock{
-	//	UploadFunc: func(context.Context, io.ReadCloser, upload.Metadata) error {
-	//		return nil
-	//	},
-	//	CheckerFunc: func(_ context.Context, _ *healthcheck.CheckState) error {
-	//		return nil
-	//	},
-	//}
+	apiClient := &mocks_importer.UploadServiceBackendMock{
+		UploadFunc: func(context.Context, io.ReadCloser, upload.Metadata) error {
+			return nil
+		},
+		CheckerFunc: func(_ context.Context, _ *healthcheck.CheckState) error {
+			return nil
+		},
+	}
 
-	apiClient := upload.NewAPIClient(cfg.UploadAPIURL, cfg.ServiceAuthToken)
+	//apiClient := upload.NewAPIClient(cfg.UploadAPIURL, cfg.ServiceAuthToken)
 	return apiClient, nil
 }
 
