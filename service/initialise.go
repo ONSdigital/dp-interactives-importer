@@ -169,8 +169,8 @@ func (e *Init) DoGetUploadServiceBackend(ctx context.Context, cfg *config.Config
 			UploadFunc: func(context.Context, io.ReadCloser, upload.Metadata) error {
 				return nil
 			},
-			CheckerFunc: func(_ context.Context, _ *healthcheck.CheckState) error {
-				return nil
+			CheckerFunc: func(_ context.Context, state *healthcheck.CheckState) error {
+				return state.Update(healthcheck.StatusOK, "*** MOCK ***", http.StatusOK)
 			},
 		}
 	} else {
