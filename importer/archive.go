@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	ErrNoIndexHtml          = errors.New("interactive must contain 1 index.html in root folder")
-	ErrMoreThanOneIndexHtml = errors.New("there can only be 1 index.html in an interactive")
+	ErrNoIndexHtml          = errors.New("interactive must contain 1 index.html")
 	fileMatchersToIgnore    = []matcher{
 		//hidden files
 		func(f string) bool { return f[0] == '.' },
@@ -71,13 +70,7 @@ func (a *Archive) OpenAndValidate() error {
 			}
 
 			if strings.EqualFold(filepath.Base(f.Name), "index.html") {
-				if hasIndexHtml {
-					return ErrMoreThanOneIndexHtml
-				}
-				// Check that the above index file is in root
-				if strings.EqualFold(filepath.Clean(f.Name), "index.html") {
-					hasIndexHtml = true
-				}
+				hasIndexHtml = true
 			}
 
 			size := int64(f.UncompressedSize64)

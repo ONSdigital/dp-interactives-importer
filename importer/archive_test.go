@@ -77,22 +77,6 @@ func TestArchive(t *testing.T) {
 		})
 	})
 
-	Convey("Given an invalid zip file (multiple index.html)", t, func() {
-		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js", "index.html", "test/index.html")
-		defer os.Remove(archiveName)
-		So(err, ShouldBeNil)
-		So(archiveName, ShouldNotBeEmpty)
-
-		Convey("Then open should run successfully", func() {
-			archive, err := os.Open(archiveName)
-			So(err, ShouldBeNil)
-
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
-			err = a.OpenAndValidate()
-			So(err, ShouldEqual, importer.ErrMoreThanOneIndexHtml)
-		})
-	})
-
 	Convey("Given an actual valid zip file", t, func() {
 		rc, err := validZipFile.Open("test/single-interactive.zip")
 		So(err, ShouldBeNil)
@@ -101,17 +85,6 @@ func TestArchive(t *testing.T) {
 			a := &importer.Archive{Context: context.TODO(), ReadCloser: rc}
 			err = a.OpenAndValidate()
 			So(err, ShouldBeNil)
-		})
-	})
-
-	Convey("Given an actual invalid zip file", t, func() {
-		rc, err := invalidZipFile.Open("test/dvc1774.zip")
-		So(err, ShouldBeNil)
-
-		Convey("Then open should error", func() {
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: rc}
-			err = a.OpenAndValidate()
-			So(err, ShouldEqual, importer.ErrNoIndexHtml)
 		})
 	})
 }
