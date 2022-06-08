@@ -5,19 +5,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"mime"
-	"path/filepath"
-	"strings"
-
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/h2non/filetype"
 	"github.com/pkg/errors"
+	"io"
+	"mime"
+	"path/filepath"
 )
 
 var (
-	ErrNoIndexHtml          = errors.New("interactive must contain 1 index.html")
-	fileMatchersToIgnore    = []matcher{
+	fileMatchersToIgnore = []matcher{
 		//hidden files
 		func(f string) bool { return f[0] == '.' },
 		//MACOSX created when right-click, compress: https://superuser.com/questions/104500/what-is-macosx-folder
@@ -56,7 +53,6 @@ func (a *Archive) OpenAndValidate() error {
 		return err
 	}
 
-	hasIndexHtml := false
 	for _, f := range zipReader.File {
 		if IsRegular(f) {
 			mimetype, err := MimeType(f)
@@ -69,10 +65,6 @@ func (a *Archive) OpenAndValidate() error {
 				return err
 			}
 
-			if strings.EqualFold(filepath.Base(f.Name), "index.html") {
-				hasIndexHtml = true
-			}
-
 			size := int64(f.UncompressedSize64)
 			a.Files = append(a.Files, &File{
 				Context:     a.Context,
@@ -82,10 +74,6 @@ func (a *Archive) OpenAndValidate() error {
 				MimeType:    mimetype,
 			})
 		}
-	}
-
-	if !hasIndexHtml {
-		return ErrNoIndexHtml
 	}
 
 	return nil

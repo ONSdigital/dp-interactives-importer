@@ -39,7 +39,7 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   ":27400",
-		UploadAPIURL:               "mock",
+		UploadAPIURL:               "http://localhost:25100",
 		InteractivesAPIURL:         "http://localhost:27500",
 		AwsRegion:                  "eu-west-1",
 		DownloadBucketName:         "dp-interactives-file-uploads",

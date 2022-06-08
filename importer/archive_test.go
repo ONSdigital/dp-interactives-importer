@@ -61,22 +61,6 @@ func TestArchive(t *testing.T) {
 		})
 	})
 
-	Convey("Given an invalid zip file (no index.html)", t, func() {
-		archiveName, err := test.CreateTestZip("root.css", "root.html", "root.js")
-		defer os.Remove(archiveName)
-		So(err, ShouldBeNil)
-		So(archiveName, ShouldNotBeEmpty)
-
-		Convey("Then open should run successfully", func() {
-			archive, err := os.Open(archiveName)
-			So(err, ShouldBeNil)
-
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
-			err = a.OpenAndValidate()
-			So(err, ShouldEqual, importer.ErrNoIndexHtml)
-		})
-	})
-
 	Convey("Given an actual valid zip file", t, func() {
 		rc, err := validZipFile.Open("test/single-interactive.zip")
 		So(err, ShouldBeNil)
