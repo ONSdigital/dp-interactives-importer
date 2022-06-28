@@ -11,20 +11,21 @@ import (
 	"io"
 	"mime"
 	"path/filepath"
+	"strings"
 )
 
 var (
 	fileMatchersToIgnore = []matcher{
 		//hidden files
-		func(f string) bool { return f[0] == '.' },
+		func(dir, name string) bool { return name[0] == '.' },
 		//MACOSX created when right-click, compress: https://superuser.com/questions/104500/what-is-macosx-folder
-		func(f string) bool { return f == "__MACOSX" },
+		func(dir, name string) bool { return name == "__MACOSX" || strings.Contains(dir, "__MACOSX") },
 		//https://en.wikipedia.org/wiki/Windows_thumbnail_cache
-		func(f string) bool { return f == "Thumbs.db" },
+		func(dir, name string) bool { return name == "Thumbs.db" },
 	}
 )
 
-type matcher func(string) bool
+type matcher func(string, string) bool
 
 type Archive struct {
 	Context    context.Context
@@ -57,7 +58,7 @@ func (a *Archive) OpenAndValidate() error {
 		if IsRegular(f) {
 			mimetype, err := MimeType(f)
 			if err != nil {
-				return fmt.Errorf("cannot determine mime type: %s", f.Name)
+				return fmt.Errorf("cannot determine mime type: %s %w", f.Name, err)
 			}
 
 			rc, err := f.Open()
@@ -86,13 +87,12 @@ func (a *Archive) Close() {
 }
 
 func IsRegular(f *zip.File) bool {
-	b := filepath.Base(f.Name)
 	ignore := !f.Mode().IsRegular()
 	for _, m := range fileMatchersToIgnore {
 		if ignore {
 			break
 		}
-		ignore = m(b)
+		ignore = m(filepath.Dir(f.Name), filepath.Base(f.Name))
 	}
 	return !ignore
 }
@@ -104,6 +104,10 @@ func MimeType(f *zip.File) (string, error) {
 	}
 
 	extension := filepath.Ext(f.Name)
+	if extension == ".geojson" {
+		return "application/geo+json", rc.Close()
+	}
+
 	mimetype := mime.TypeByExtension(extension)
 	if mimetype == "" {
 		kind, _ := filetype.MatchReader(rc)

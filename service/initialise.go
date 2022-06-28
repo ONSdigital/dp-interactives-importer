@@ -144,7 +144,7 @@ func (e *Init) DoGetS3Client(ctx context.Context, cfg *config.Config) (importer.
 			Endpoint:         aws.String(cfg.AwsEndpoint),
 			Region:           aws.String(cfg.AwsRegion),
 			S3ForcePathStyle: aws.Bool(true),
-			Credentials:      credentials.NewStaticCredentials("n/a", "n/a", ""),
+			Credentials:      credentials.NewStaticCredentials("na", "na", ""),
 		})
 
 		if err != nil {

@@ -97,6 +97,7 @@ func TestMimeType(t *testing.T) {
 				"js/DataStructures.Tree.js":               "application/javascript",
 				"js/modernizr.custom.56904.js":            "application/javascript",
 				"fonts/glyphicons-halflings-regular.woff": "font/woff",
+				"atlas-tiles/geo/E00135356.geojson":       "application/geo+json",
 			}
 
 			var count int
@@ -134,6 +135,9 @@ func TestIsRegular(t *testing.T) {
 		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/.hidden"}}
 		b = importer.IsRegular(f)
 		So(b, ShouldBeFalse)
+		f = &zip.File{FileHeader: zip.FileHeader{Name: "/interactives/label-diKJI1pJ/__MACOSX/atlas-tiles/._index.html"}}
+		b = importer.IsRegular(f)
+		So(b, ShouldBeFalse)
 	})
 
 	Convey("Given a file from a MacOS compressed zip file IsRegular should be false", t, func() {
@@ -141,6 +145,9 @@ func TestIsRegular(t *testing.T) {
 		b := importer.IsRegular(f)
 		So(b, ShouldBeFalse)
 		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/__MACOSX"}}
+		b = importer.IsRegular(f)
+		So(b, ShouldBeFalse)
+		f = &zip.File{FileHeader: zip.FileHeader{Name: "/dir1/dir2/__MACOSX/subdir/name"}}
 		b = importer.IsRegular(f)
 		So(b, ShouldBeFalse)
 	})
