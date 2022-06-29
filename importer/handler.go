@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"archive/zip"
 	"context"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/dp-interactives-importer/config"
@@ -8,6 +9,7 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/log.go/v2/log"
 	"io"
+	"os"
 )
 
 type InteractivesUploadedHandler struct {
@@ -26,7 +28,6 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		return err
 	}
 
-	var readCloser io.ReadCloser
 	var zipSize *int64
 	var archiveFiles []*interactives.InteractiveFile
 
@@ -63,38 +64,64 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 	logData["title"] = event.Title
 	logData["current_files"] = event.CurrentFiles
 
-	// Download zip file from s3
-	readCloser, zipSize, err = h.S3.Get(event.Path)
+	log.Info(ctx, "download zip file from s3", logData)
+	readCloser, zipSize, err := h.S3.Get(event.Path)
 	if err != nil {
 		log.Error(ctx, "cannot get zip from s3", err, logData)
 		return err
 	}
-	logData["zip_size"] = zipSize
-
-	// Open zip and validate contents
-	archive := &Archive{Context: ctx, ReadCloser: readCloser}
-	err = archive.OpenAndValidate()
+	tmpZip, err := os.CreateTemp("", "s3-zip_*.zip")
 	if err != nil {
-		log.Error(ctx, "cannot open and validate zip", err, logData)
 		return err
 	}
-	defer archive.Close()
-	logData["num_files"] = len(archive.Files)
+	if _, err = io.Copy(tmpZip, readCloser); err != nil {
+		return err
+	}
+	tmpZip.Close()
+	defer os.Remove(tmpZip.Name())
+	logData["zip_size"] = zipSize
+
+	log.Info(ctx, "validate zip", logData)
+	counterFunc := func(count uint64, mimetype string, zip *zip.File) error {
+		if count%1000 == 0 {
+			log.Info(ctx, "processed 1000 files", logData)
+		}
+		return nil
+	}
+	err = Process(tmpZip.Name(), counterFunc)
+	if err != nil {
+		log.Error(ctx, "cannot validate zip", err, logData)
+		return err
+	}
 
 	// Upload each file in zip
-	for _, f := range archive.Files {
-		var savedFilename string
-		savedFilename, err = h.UploadService.SendFile(ctx, event, f)
+	log.Info(ctx, "start upload of zip files", logData)
+	uploadFunc := func(count uint64, mimetype string, zip *zip.File) error {
+		if count%1000 == 0 {
+			log.Info(ctx, "processed 1000 files", logData)
+		}
+
+		rc, err := zip.Open()
 		if err != nil {
-			log.Error(ctx, "failed to upload file", err, log.Data{"file": f})
 			return err
 		}
-		archiveFiles = append(archiveFiles, &interactives.InteractiveFile{
-			Name:     savedFilename,
-			Mimetype: f.MimeType,
-			Size:     f.SizeInBytes,
-			URI:      f.Name, //this could be rendered from http://domain/interactives/uri
-		})
+		defer rc.Close()
+
+		file := &File{
+			Context:     ctx,
+			Name:        zip.Name,
+			ReadCloser:  rc,
+			SizeInBytes: int64(zip.UncompressedSize64),
+			MimeType:    mimetype,
+		}
+
+		_, err = h.UploadService.SendFile(ctx, event, file)
+		return err
+	}
+	err = Process(tmpZip.Name(), uploadFunc)
+	if err != nil {
+		log.Error(ctx, "cannot process zip", err, logData)
+		return err
 	}
 
 	log.Info(ctx, "successfully processed", logData)

@@ -2,19 +2,22 @@ package importer
 
 import (
 	"archive/zip"
-	"bytes"
 	"context"
 	"fmt"
-	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/h2non/filetype"
 	"github.com/pkg/errors"
 	"io"
 	"mime"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 )
 
+const batchSize = 10
+
 var (
+	EmptyProcessor       = func(uint64, string, *zip.File) error { return nil }
 	fileMatchersToIgnore = []matcher{
 		//hidden files
 		func(dir, name string) bool { return name[0] == '.' },
@@ -27,12 +30,6 @@ var (
 
 type matcher func(string, string) bool
 
-type Archive struct {
-	Context    context.Context
-	ReadCloser io.ReadCloser
-	Files      []*File
-}
-
 type File struct {
 	Context     context.Context
 	ReadCloser  io.ReadCloser
@@ -42,48 +39,61 @@ type File struct {
 	Closed      bool
 }
 
-func (a *Archive) OpenAndValidate() error {
-	//need to read it all for archives
-	raw, err := io.ReadAll(a.ReadCloser)
+func Process(z string, processor func(count uint64, mimetype string, zip *zip.File) error) error {
+	zipReader, err := zip.OpenReader(z)
 	if err != nil {
 		return err
 	}
 
-	zipReader, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
-	if err != nil {
-		return err
-	}
+	var count uint64
+	var validationErrs []error
+	var wg sync.WaitGroup
+
+	ch := make(chan struct{}, batchSize)
 
 	for _, f := range zipReader.File {
-		if IsRegular(f) {
-			mimetype, err := MimeType(f)
+		file := f
+		wg.Add(1)
+		ch <- struct{}{}
+		go func() {
+			defer wg.Done()
+			skip, mimetype, err := ValidateZipFile(file)
 			if err != nil {
-				return fmt.Errorf("cannot determine mime type: %s %w", f.Name, err)
+				validationErrs = append(validationErrs, fmt.Errorf("cannot open zip file: %s %w", file.Name, err))
 			}
 
-			rc, err := f.Open()
-			if err != nil {
-				return err
+			if !skip {
+				currentCount := atomic.AddUint64(&count, 1)
+				err = processor(currentCount, mimetype, file)
+				if err != nil {
+					//should we hit the kill switch here...
+					validationErrs = append(validationErrs, fmt.Errorf("cannot process zip file: %s %w", file.Name, err))
+				}
 			}
 
-			size := int64(f.UncompressedSize64)
-			a.Files = append(a.Files, &File{
-				Context:     a.Context,
-				Name:        f.Name,
-				ReadCloser:  rc,
-				SizeInBytes: size,
-				MimeType:    mimetype,
-			})
-		}
+			<-ch
+		}()
+	}
+	wg.Wait()
+
+	if len(validationErrs) > 0 {
+		return fmt.Errorf("found %d validation errors: %v", len(validationErrs), validationErrs)
 	}
 
 	return nil
 }
 
-func (a *Archive) Close() {
-	if e := a.ReadCloser.Close(); e != nil {
-		log.Warn(a.Context, "cannot close archive", log.Data{"error": e.Error()})
+func ValidateZipFile(file *zip.File) (skip bool, mimetype string, err error) {
+	if IsRegular(file) {
+		mimetype, err = MimeType(file)
+		if err != nil {
+			err = fmt.Errorf("cannot determine mime type: %s %w", file.Name, err)
+			return
+		}
+	} else {
+		return true, "", nil
 	}
+	return
 }
 
 func IsRegular(f *zip.File) bool {

@@ -3,11 +3,11 @@ package importer_test
 import (
 	"archive/zip"
 	"bytes"
-	"context"
 	"embed"
 	"io"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/ONSdigital/dp-interactives-importer/importer"
@@ -35,8 +35,7 @@ func TestArchive(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Then there should an error returned when attempt to open", func() {
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
-			err = a.OpenAndValidate()
+			err = importer.Process(archive.Name(), importer.EmptyProcessor)
 			So(err, ShouldBeError, zip.ErrFormat)
 		})
 	})
@@ -48,26 +47,25 @@ func TestArchive(t *testing.T) {
 		So(archiveName, ShouldNotBeEmpty)
 
 		Convey("Then open should run successfully", func() {
-			archive, err := os.Open(archiveName)
-			So(err, ShouldBeNil)
 
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: archive}
-			err = a.OpenAndValidate()
+			var count uint64
+			counter := func(uint64, string, *zip.File) error {
+				atomic.AddUint64(&count, 1)
+				return nil
+			}
+
+			err = importer.Process(archiveName, counter)
 			So(err, ShouldBeNil)
 
 			Convey("And files in archive should be 4", func() {
-				So(len(a.Files), ShouldEqual, 4)
+				So(count, ShouldEqual, 4)
 			})
 		})
 	})
 
 	Convey("Given an actual valid zip file", t, func() {
-		rc, err := validZipFile.Open("test/single-interactive.zip")
-		So(err, ShouldBeNil)
-
 		Convey("Then open should run successfully", func() {
-			a := &importer.Archive{Context: context.TODO(), ReadCloser: rc}
-			err = a.OpenAndValidate()
+			err := importer.Process("test/single-interactive.zip", importer.EmptyProcessor)
 			So(err, ShouldBeNil)
 		})
 	})
