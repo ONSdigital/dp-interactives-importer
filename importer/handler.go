@@ -88,7 +88,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		}
 		return nil
 	}
-	err = Process(tmpZip.Name(), counterFunc)
+	err = Process(h.Cfg.BatchSize, tmpZip.Name(), counterFunc)
 	if err != nil {
 		log.Error(ctx, "cannot validate zip", err, logData)
 		return err
@@ -118,7 +118,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		_, err = h.UploadService.SendFile(ctx, event, file)
 		return err
 	}
-	err = Process(tmpZip.Name(), uploadFunc)
+	err = Process(h.Cfg.BatchSize, tmpZip.Name(), uploadFunc)
 	if err != nil {
 		log.Error(ctx, "cannot process zip", err, logData)
 		return err

@@ -14,8 +14,6 @@ import (
 	"sync/atomic"
 )
 
-const batchSize = 10
-
 var (
 	EmptyProcessor       = func(uint64, string, *zip.File) error { return nil }
 	fileMatchersToIgnore = []matcher{
@@ -39,7 +37,7 @@ type File struct {
 	Closed      bool
 }
 
-func Process(z string, processor func(count uint64, mimetype string, zip *zip.File) error) error {
+func Process(batchSize int, z string, processor func(count uint64, mimetype string, zip *zip.File) error) error {
 	zipReader, err := zip.OpenReader(z)
 	if err != nil {
 		return err
