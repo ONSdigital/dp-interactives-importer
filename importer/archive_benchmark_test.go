@@ -16,7 +16,7 @@ func TestLargeArchive(t *testing.T) {
 	if *becnhmarkFlag {
 		Convey("Given a large zip file", t, func() {
 			Convey("Then open should run successfully", func() {
-				err := importer.Process("/Users/markryan/Postman/files/largetest.zip", importer.EmptyProcessor)
+				err := importer.Process(batchSize, "/Users/markryan/Postman/files/largetest.zip", importer.EmptyProcessor)
 				So(err, ShouldBeNil)
 			})
 		})

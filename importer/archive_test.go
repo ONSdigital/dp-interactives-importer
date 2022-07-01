@@ -17,6 +17,8 @@ import (
 )
 
 var (
+	batchSize = 10
+
 	//go:embed test/single-interactive.zip
 	validZipFile embed.FS
 
@@ -35,7 +37,7 @@ func TestArchive(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Then there should an error returned when attempt to open", func() {
-			err = importer.Process(archive.Name(), importer.EmptyProcessor)
+			err = importer.Process(batchSize, archive.Name(), importer.EmptyProcessor)
 			So(err, ShouldBeError, zip.ErrFormat)
 		})
 	})
@@ -54,7 +56,7 @@ func TestArchive(t *testing.T) {
 				return nil
 			}
 
-			err = importer.Process(archiveName, counter)
+			err = importer.Process(batchSize, archiveName, counter)
 			So(err, ShouldBeNil)
 
 			Convey("And files in archive should be 4", func() {
@@ -65,7 +67,7 @@ func TestArchive(t *testing.T) {
 
 	Convey("Given an actual valid zip file", t, func() {
 		Convey("Then open should run successfully", func() {
-			err := importer.Process("test/single-interactive.zip", importer.EmptyProcessor)
+			err := importer.Process(batchSize, "test/single-interactive.zip", importer.EmptyProcessor)
 			So(err, ShouldBeNil)
 		})
 	})
