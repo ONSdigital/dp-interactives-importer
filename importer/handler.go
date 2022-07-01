@@ -118,19 +118,17 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 			MimeType:    mimetype,
 		}
 
+		savedFileName, err := h.UploadService.SendFile(ctx, event, file)
 		fileExt := filepath.Ext(zip.Name)
 		if strings.EqualFold(fileExt, ".html") || strings.EqualFold(fileExt, ".htm") {
 			//for optimisation - i.e. handling super large zips with 300k files only save these
 			//applicable for preview
 			archiveFiles = append(archiveFiles, &interactives.InteractiveFile{
-				Name:     zip.Name,
+				Name:     savedFileName,
 				Size:     size,
-				URI:      zip.Name,
 				Mimetype: mimetype,
 			})
 		}
-
-		_, err = h.UploadService.SendFile(ctx, event, file)
 		return err
 	}
 	err = Process(h.Cfg.BatchSize, tmpZip.Name(), uploadFunc)

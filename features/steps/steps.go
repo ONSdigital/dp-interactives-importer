@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -100,6 +101,10 @@ func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(
 	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
 	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
+	assert.Empty(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.Files[0].URI)
+	root, _ := importer.GetPathAndFilename("", id, 1)
+	isFileWithSameRoot := strings.HasPrefix(firstCall.PatchRequest.Interactive.Archive.Files[0].Name, root)
+	assert.True(&c.ErrorFeature, isFileWithSameRoot)
 	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportSuccessful)
 	return c.ErrorFeature.StepError()
 }
