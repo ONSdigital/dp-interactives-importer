@@ -53,7 +53,7 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		BatchSize:                  1000,
+		BatchSize:                  5,
 	}
 
 	return cfg, envconfig.Process("", cfg)
