@@ -10,8 +10,6 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 type InteractivesUploadedHandler struct {
@@ -119,17 +117,12 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		}
 
 		savedFileName, err := h.UploadService.SendFile(ctx, event, file)
-		fileExt := filepath.Ext(zip.Name)
-		if strings.EqualFold(fileExt, ".html") || strings.EqualFold(fileExt, ".htm") {
-			//for optimisation - i.e. handling super large zips with 300k files only save these
-			//applicable for preview
-			archiveFiles = append(archiveFiles, &interactives.InteractiveFile{
-				Name:     savedFileName,
-				Size:     size,
-				Mimetype: mimetype,
-				URI:      zip.Name, //this could be rendered from http://domain/interactives/uri
-			})
-		}
+		archiveFiles = append(archiveFiles, &interactives.InteractiveFile{
+			Name:     savedFileName,
+			Size:     size,
+			Mimetype: mimetype,
+			URI:      zip.Name, //this could be rendered from http://domain/interactives/uri
+		})
 		return err
 	}
 	err = Process(h.Cfg.BatchSize, tmpZip.Name(), uploadFunc)
