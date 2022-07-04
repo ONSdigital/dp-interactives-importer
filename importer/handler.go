@@ -127,6 +127,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 				Name:     savedFileName,
 				Size:     size,
 				Mimetype: mimetype,
+				URI:      zip.Name, //this could be rendered from http://domain/interactives/uri
 			})
 		}
 		return err

@@ -101,10 +101,17 @@ func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(
 	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
 	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
-	assert.Empty(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.Files[0].URI)
+
+	name := firstCall.PatchRequest.Interactive.Archive.Files[0].Name
+	uri := firstCall.PatchRequest.Interactive.Archive.Files[0].URI
 	root, _ := importer.GetPathAndFilename("", id, 1)
-	isFileWithSameRoot := strings.HasPrefix(firstCall.PatchRequest.Interactive.Archive.Files[0].Name, root)
+	isFileWithSameRoot := strings.HasPrefix(name, root)
+	assert.NotEmpty(&c.ErrorFeature, uri)
 	assert.True(&c.ErrorFeature, isFileWithSameRoot)
+
+	uriEndsWithName := strings.HasSuffix(name, uri)
+	assert.True(&c.ErrorFeature, uriEndsWithName)
+
 	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportSuccessful)
 	return c.ErrorFeature.StepError()
 }
