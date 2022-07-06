@@ -28,36 +28,10 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		return err
 	}
 
-	var zipSize *int64
-	var archiveFiles []*interactives.InteractiveFile
+	var zipSize int64
 
-	// Defer an update via API - deferred so we always attempt an update!
-	defer func() {
-		patchReq := interactives.PatchRequest{
-			Attribute: interactives.PatchArchive,
-			Interactive: interactives.Interactive{
-				ID: event.ID,
-				Archive: &interactives.InteractiveArchive{
-					Name: event.Path,
-				},
-			},
-		}
-		if err != nil {
-			logData["error"] = err.Error()
-			patchReq.Interactive.Archive.ImportMessage = err.Error()
-		} else {
-			patchReq.Interactive.Archive.ImportSuccessful = true
-			patchReq.Interactive.Archive.Size = *zipSize
-			patchReq.Interactive.Archive.Files = archiveFiles
-		}
-		// user token not valid - we auth user on api endpoints
-		_, apiErr := h.InteractivesAPIClient.PatchInteractive(ctx, "", h.Cfg.ServiceAuthToken, event.ID, patchReq)
-		if apiErr != nil {
-			//todo what if this fails - retry?
-			logData["apiError"] = apiErr.Error()
-			log.Warn(ctx, "failed to update interactive", logData)
-		}
-	}()
+	uploadJob := NewJob(ctx, h.Cfg, h.InteractivesAPIClient)
+	defer uploadJob.Finish(&logData, event, &zipSize, &err) // defer finish() so we always attempt!
 
 	logData["id"] = event.ID
 	logData["path"] = event.Path
@@ -65,11 +39,12 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 	logData["current_files"] = event.CurrentFiles
 
 	log.Info(ctx, "download zip file from s3", logData)
-	readCloser, zipSize, err := h.S3.Get(event.Path)
+	readCloser, size, err := h.S3.Get(event.Path)
 	if err != nil {
 		log.Error(ctx, "cannot get zip from s3", err, logData)
 		return err
 	}
+	zipSize = *size
 	tmpZip, err := os.CreateTemp("", "s3-zip_*.zip")
 	if err != nil {
 		return err
@@ -117,7 +92,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		}
 
 		savedFileName, err := h.UploadService.SendFile(ctx, event, file)
-		archiveFiles = append(archiveFiles, &interactives.InteractiveFile{
+		uploadJob.Add(&interactives.InteractiveFile{
 			Name:     savedFileName,
 			Size:     size,
 			Mimetype: mimetype,
