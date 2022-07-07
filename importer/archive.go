@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 var (
@@ -37,16 +36,35 @@ type File struct {
 	Closed      bool
 }
 
+type batch struct {
+	mu             sync.Mutex
+	count          uint64
+	validationErrs []error
+}
+
+func (b *batch) inc() uint64 {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.count++
+	return b.count
+}
+
+func (b *batch) err(err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.validationErrs = append(b.validationErrs, err)
+}
+
 func Process(batchSize int, z string, processor func(count uint64, mimetype string, zip *zip.File) error) error {
 	zipReader, err := zip.OpenReader(z)
 	if err != nil {
 		return err
 	}
 
-	var count uint64
-	var validationErrs []error
 	var wg sync.WaitGroup
-
+	b := batch{}
 	ch := make(chan struct{}, batchSize)
 
 	for _, f := range zipReader.File {
@@ -57,15 +75,15 @@ func Process(batchSize int, z string, processor func(count uint64, mimetype stri
 			defer wg.Done()
 			skip, mimetype, err := ValidateZipFile(file)
 			if err != nil {
-				validationErrs = append(validationErrs, fmt.Errorf("cannot open zip file: %s %w", file.Name, err))
+				b.err(fmt.Errorf("cannot open zip file: %s %w", file.Name, err))
 			}
 
 			if !skip {
-				currentCount := atomic.AddUint64(&count, 1)
+				currentCount := b.inc()
 				err = processor(currentCount, mimetype, file)
 				if err != nil {
 					//should we hit the kill switch here...
-					validationErrs = append(validationErrs, fmt.Errorf("cannot process zip file: %s %w", file.Name, err))
+					b.err(fmt.Errorf("cannot process zip file: %s %w", file.Name, err))
 				}
 			}
 
@@ -74,8 +92,8 @@ func Process(batchSize int, z string, processor func(count uint64, mimetype stri
 	}
 	wg.Wait()
 
-	if len(validationErrs) > 0 {
-		return fmt.Errorf("found %d validation errors: %v", len(validationErrs), validationErrs)
+	if len(b.validationErrs) > 0 {
+		return fmt.Errorf("found %d validation errors: %v", len(b.validationErrs), b.validationErrs)
 	}
 
 	return nil
