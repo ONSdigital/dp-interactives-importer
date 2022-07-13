@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	downstreamErr              = errors.New("downstream upload error")
-	downstreamAlreadyExistsErr = errors.New(importer.DuplicateFileErr)
+	downstreamErr = errors.New("downstream upload error")
+	rootPath      = "root/path"
 )
 
 func TestUploadService(t *testing.T) {
@@ -41,25 +41,25 @@ func TestUploadService(t *testing.T) {
 			svc := importer.NewUploadService(mockBackend)
 
 			Convey("Then there should be no error when we send the file", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f, rootPath)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-1/root/dir/testing.css")
+				So(f, ShouldEqual, rootPath+"/root/dir/testing.css")
 			})
 
 			Convey("Then there should be no error when we send the file and the event has some existing files", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f, rootPath)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-3/root/dir/testing.css")
+				So(f, ShouldEqual, rootPath+"/root/dir/testing.css")
 				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
 			})
 
 			Convey("Then there should be no error when we send the file and the event has some existing files without versioned path", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/root/dir/testing.css"), f)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/root/dir/testing.css"), f, rootPath)
 
 				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-1/root/dir/testing.css")
+				So(f, ShouldEqual, rootPath+"/root/dir/testing.css")
 				So(len(mockBackend.UploadCalls()), ShouldEqual, 1)
 			})
 		})
@@ -73,31 +73,11 @@ func TestUploadService(t *testing.T) {
 			svc := importer.NewUploadService(mockBackend)
 
 			Convey("Then there should be an expected error when we send the file", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f, rootPath)
 
 				So(err, ShouldNotBeNil)
 				So(f, ShouldBeEmpty)
 				So(err, ShouldBeError, downstreamErr)
-			})
-		})
-
-		Convey("And an upload service backend that fails on upload because already exists", func() {
-			mockBackend := &mocks_importer.UploadServiceBackendMock{
-				UploadFunc: func(_ context.Context, _ io.ReadCloser, u upload.Metadata) error {
-					if strings.Contains(u.Path, "version-3") {
-						return nil
-					}
-					return downstreamAlreadyExistsErr
-				},
-			}
-			svc := importer.NewUploadService(mockBackend)
-
-			Convey("Then there should be no error after attempting with valid version", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
-
-				So(err, ShouldBeNil)
-				So(f, ShouldEqual, "interactives/id/version-3/root/dir/testing.css")
-				So(len(mockBackend.UploadCalls()), ShouldEqual, 3)
 			})
 		})
 	})
@@ -108,9 +88,8 @@ func getTestEvent(filename string, in ...string) *importer.InteractivesUploaded 
 	existing = append(existing, in...)
 
 	return &importer.InteractivesUploaded{
-		ID:           "id",
-		Path:         filename,
-		Title:        "title",
-		CurrentFiles: existing,
+		ID:    "id",
+		Path:  filename,
+		Title: "title",
 	}
 }

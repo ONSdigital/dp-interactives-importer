@@ -23,8 +23,8 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^these events are consumed:$`, c.theseEventsAreConsumed)
 	ctx.Step(`^"([^"]*)" interactives should be downloaded from s3 successfully$`, c.theseInteractivesAreDownloadedFromS3)
 	ctx.Step(`^"([^"]*)" interactives should be uploaded via the upload service$`, c.interactivesShouldBeUploadedViaTheUploadService)
-	ctx.Step(`^"([^"]*)" interactive should be successfully updated via the interactives API$`, c.interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI)
-	ctx.Step(`^"([^"]*)" interactive should be updated as a failure via the interactives API$`, c.interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI)
+	ctx.Step(`^"([^"]*)" interactive should be successfully updated via the interactives API with (\d+) files$`, c.interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPIWithFiles)
+	ctx.Step(`^"([^"]*)" interactive should be updated as a failure via the interactives API with (\d+) files$`, c.interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPIWithFiles)
 }
 
 func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
@@ -47,7 +47,6 @@ func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
 
 	// consume extracted observations
 	for _, e := range events {
-		e.CurrentFiles = []string{""} //needs empty value :(
 		if err := sendToConsumer(c.KafkaConsumer, e); err != nil {
 			return err
 		}
@@ -96,27 +95,21 @@ func (c *Component) interactivesShouldBeUploadedViaTheUploadService(count int) e
 	return c.ErrorFeature.StepError()
 }
 
-func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(id string) error {
-	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PatchInteractiveCalls()))
-	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
-	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
-	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
+func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPIWithFiles(id string, count int) error {
+	totalPatchRequests := len(c.InteractivesAPI.PatchInteractiveCalls())
+	assert.Equal(&c.ErrorFeature, count+1, totalPatchRequests)
 
-	name := firstCall.PatchRequest.Interactive.Archive.Files[0].Name
-	uri := firstCall.PatchRequest.Interactive.Archive.Files[0].URI
-	root, _ := importer.GetPathAndFilename("", id, 1)
-	isFileWithSameRoot := strings.HasPrefix(name, root)
-	assert.NotEmpty(&c.ErrorFeature, uri)
-	assert.True(&c.ErrorFeature, isFileWithSameRoot)
-
-	uriEndsWithName := strings.HasSuffix(name, uri)
-	assert.True(&c.ErrorFeature, uriEndsWithName)
-
-	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportSuccessful)
+	lastCall := c.InteractivesAPI.PatchInteractiveCalls()[totalPatchRequests-1]
+	dir := lastCall.PatchRequest.Interactive.Archive.UploadRootDirectory
+	isUploadRootDirWithExpectedPrefix := strings.HasPrefix(dir, "interactives/")
+	assert.True(&c.ErrorFeature, lastCall.PatchRequest.Interactive.Archive.ImportSuccessful)
+	assert.Equal(&c.ErrorFeature, id, lastCall.S3)
+	assert.Equal(&c.ErrorFeature, id, lastCall.PatchRequest.Interactive.ID)
+	assert.True(&c.ErrorFeature, isUploadRootDirWithExpectedPrefix)
 	return c.ErrorFeature.StepError()
 }
 
-func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI(id string) error {
+func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPIWithFiles(id string, count int) error {
 	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PatchInteractiveCalls()))
 	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.S3)

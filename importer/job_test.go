@@ -37,13 +37,13 @@ func TestJobAdd(t *testing.T) {
 				wg.Add(goRoutineCount)
 				for i := 0; i < goRoutineCount; i++ {
 					go func() {
-						uploadJob.Add(&interactives.InteractiveFile{})
+						uploadJob.Add(&importer.InteractivesUploaded{}, &interactives.ArchiveFile{})
 						wg.Done()
 					}()
 				}
 				wg.Wait()
 
-				So(len(uploadJob.Files()), ShouldEqual, goRoutineCount)
+				So(len(mockInteractivesAPI.PatchInteractiveCalls()), ShouldEqual, goRoutineCount)
 			})
 		})
 	})
@@ -52,9 +52,10 @@ func TestJobAdd(t *testing.T) {
 func TestJobFinish(t *testing.T) {
 	anErr := errors.New("an error")
 	logData := log.Data{}
+	rootPath := "/root/path/"
 	event := &importer.InteractivesUploaded{
 		ID:   "1",
-		Path: "/root/path/",
+		Path: rootPath,
 	}
 	var mockInteractivesAPI *mocks_importer.InteractivesAPIClientMock
 
@@ -73,7 +74,7 @@ func TestJobFinish(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				uploadJob := importer.NewJob(context.TODO(), cfg, mockInteractivesAPI)
-				defer uploadJob.Finish(&logData, event, &zipSize, &err)
+				defer uploadJob.Finish(&logData, event, rootPath, &zipSize, &err)
 				err = anErr
 				wg.Done()
 			}()

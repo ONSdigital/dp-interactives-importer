@@ -3,11 +3,13 @@ package importer
 import (
 	"archive/zip"
 	"context"
+	"fmt"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/schema"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/log.go/v2/log"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"io"
 	"os"
 )
@@ -29,14 +31,16 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 	}
 
 	var zipSize int64
+	//no leading slash: https://github.com/ONSdigital/dp-upload-service/blob/ecc6062e6fe5856385b5fafbe1105606c1a958ff/api/upload.go#L25
+	randomString := gonanoid.Must(16)
+	uploadRootPath := fmt.Sprintf("%s/%s/%s", "interactives", event.ID, randomString)
 
 	uploadJob := NewJob(ctx, h.Cfg, h.InteractivesAPIClient)
-	defer uploadJob.Finish(&logData, event, &zipSize, &err) // defer finish() so we always attempt!
+	defer uploadJob.Finish(&logData, event, uploadRootPath, &zipSize, &err) // defer finish() so we always attempt!
 
 	logData["id"] = event.ID
 	logData["path"] = event.Path
 	logData["title"] = event.Title
-	logData["current_files"] = event.CurrentFiles
 
 	log.Info(ctx, "download zip file from s3", logData)
 	readCloser, size, err := h.S3.Get(event.Path)
@@ -91,8 +95,12 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 			MimeType:    mimetype,
 		}
 
-		savedFileName, err := h.UploadService.SendFile(ctx, event, file)
-		uploadJob.Add(&interactives.InteractiveFile{
+		savedFileName, err := h.UploadService.SendFile(ctx, event, file, uploadRootPath)
+		if err != nil {
+			return err
+		}
+
+		err = uploadJob.Add(event, &interactives.ArchiveFile{
 			Name:     savedFileName,
 			Size:     size,
 			Mimetype: mimetype,

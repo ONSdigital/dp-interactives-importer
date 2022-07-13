@@ -2,6 +2,8 @@ module github.com/ONSdigital/dp-interactives-importer
 
 go 1.17
 
+replace github.com/ONSdigital/dp-api-clients-go/v2 => /Users/markryan/workspace/methods/ons/dp-api-clients-go
+
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.138.1
 	github.com/ONSdigital/dp-component-test v0.7.0
@@ -15,6 +17,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/h2non/filetype v1.1.3
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/rdumont/assistdog v0.0.0-20201106100018-168b06230d14
 	github.com/smartystreets/goconvey v1.7.2

@@ -5,12 +5,9 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/log.go/v2/log"
-	"sync"
 )
 
 type Job struct {
-	mu                    sync.Mutex
-	archiveFiles          []*interactives.InteractiveFile
 	ctx                   context.Context
 	interactivesAPIClient InteractivesAPIClient
 	serviceAuthToken      string
@@ -24,18 +21,17 @@ func NewJob(ctx context.Context, cfg *config.Config, interactivesAPIClient Inter
 	}
 }
 
-func (j *Job) Files() []*interactives.InteractiveFile {
-	return j.archiveFiles
+func (j *Job) Add(event *InteractivesUploaded, file *interactives.ArchiveFile) error {
+	patchReq := interactives.PatchRequest{
+		Attribute:    interactives.PatchArchiveFile,
+		ArchiveFiles: []*interactives.ArchiveFile{file},
+	}
+
+	_, err := j.interactivesAPIClient.PatchInteractive(j.ctx, "", j.serviceAuthToken, event.ID, patchReq)
+	return err
 }
 
-func (j *Job) Add(file *interactives.InteractiveFile) {
-	j.mu.Lock()
-	defer j.mu.Unlock()
-
-	j.archiveFiles = append(j.archiveFiles, file)
-}
-
-func (j *Job) Finish(logData *log.Data, event *InteractivesUploaded, zipSize *int64, err *error) {
+func (j *Job) Finish(logData *log.Data, event *InteractivesUploaded, uploadRootDirectory string, zipSize *int64, err *error) {
 	//todo sanity check?
 	l := *logData
 	e := *err
@@ -44,7 +40,7 @@ func (j *Job) Finish(logData *log.Data, event *InteractivesUploaded, zipSize *in
 		Attribute: interactives.PatchArchive,
 		Interactive: interactives.Interactive{
 			ID: event.ID,
-			Archive: &interactives.InteractiveArchive{
+			Archive: &interactives.Archive{
 				Name: event.Path,
 			},
 		},
@@ -52,9 +48,10 @@ func (j *Job) Finish(logData *log.Data, event *InteractivesUploaded, zipSize *in
 	if e != nil {
 		l["error"] = e.Error()
 		patchReq.Interactive.Archive.ImportMessage = e.Error()
+		patchReq.Interactive.Archive.UploadRootDirectory = uploadRootDirectory
 	} else {
 		patchReq.Interactive.Archive.ImportSuccessful = true
-		patchReq.Interactive.Archive.Files = j.archiveFiles
+		patchReq.Interactive.Archive.UploadRootDirectory = uploadRootDirectory
 		if zipSize != nil {
 			patchReq.Interactive.Archive.Size = *zipSize
 		}
