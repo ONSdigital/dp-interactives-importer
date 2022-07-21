@@ -21,16 +21,6 @@ func NewJob(ctx context.Context, cfg *config.Config, interactivesAPIClient Inter
 	}
 }
 
-func (j *Job) Add(event *InteractivesUploaded, file *interactives.ArchiveFile) error {
-	patchReq := interactives.PatchRequest{
-		Attribute:    interactives.PatchArchiveFile,
-		ArchiveFiles: []*interactives.ArchiveFile{file},
-	}
-
-	_, err := j.interactivesAPIClient.PatchInteractive(j.ctx, "", j.serviceAuthToken, event.ID, patchReq)
-	return err
-}
-
 func (j *Job) Finish(logData *log.Data, event *InteractivesUploaded, uploadRootDirectory string, zipSize *int64, err *error) {
 	//todo sanity check?
 	l := *logData

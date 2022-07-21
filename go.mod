@@ -3,7 +3,7 @@ module github.com/ONSdigital/dp-interactives-importer
 go 1.17
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.157.0
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.157.1
 	github.com/ONSdigital/dp-component-test v0.7.0
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-kafka/v3 v3.3.2

@@ -23,8 +23,8 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^these events are consumed:$`, c.theseEventsAreConsumed)
 	ctx.Step(`^"([^"]*)" interactives should be downloaded from s3 successfully$`, c.theseInteractivesAreDownloadedFromS3)
 	ctx.Step(`^"([^"]*)" interactives should be uploaded via the upload service$`, c.interactivesShouldBeUploadedViaTheUploadService)
-	ctx.Step(`^"([^"]*)" interactive should be successfully updated via the interactives API with (\d+) files$`, c.interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPIWithFiles)
-	ctx.Step(`^"([^"]*)" interactive should be updated as a failure via the interactives API with (\d+) files$`, c.interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPIWithFiles)
+	ctx.Step(`^"([^"]*)" interactive should be successfully updated via the interactives API$`, c.interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI)
+	ctx.Step(`^"([^"]*)" interactive should be updated as a failure via the interactives API$`, c.interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI)
 }
 
 func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
@@ -95,21 +95,19 @@ func (c *Component) interactivesShouldBeUploadedViaTheUploadService(count int) e
 	return c.ErrorFeature.StepError()
 }
 
-func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPIWithFiles(id string, count int) error {
-	totalPatchRequests := len(c.InteractivesAPI.PatchInteractiveCalls())
-	assert.Equal(&c.ErrorFeature, count+1, totalPatchRequests)
-
-	lastCall := c.InteractivesAPI.PatchInteractiveCalls()[totalPatchRequests-1]
-	dir := lastCall.PatchRequest.Interactive.Archive.UploadRootDirectory
+func (c *Component) interactiveShouldBeSuccessfullyUpdatedViaTheInteractivesAPI(id string) error {
+	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PatchInteractiveCalls()))
+	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
+	dir := firstCall.PatchRequest.Interactive.Archive.UploadRootDirectory
 	isUploadRootDirWithExpectedPrefix := strings.HasPrefix(dir, "interactives/")
-	assert.True(&c.ErrorFeature, lastCall.PatchRequest.Interactive.Archive.ImportSuccessful)
-	assert.Equal(&c.ErrorFeature, id, lastCall.S3)
-	assert.Equal(&c.ErrorFeature, id, lastCall.PatchRequest.Interactive.ID)
+	assert.True(&c.ErrorFeature, firstCall.PatchRequest.Interactive.Archive.ImportSuccessful)
+	assert.Equal(&c.ErrorFeature, id, firstCall.S3)
+	assert.Equal(&c.ErrorFeature, id, firstCall.PatchRequest.Interactive.ID)
 	assert.True(&c.ErrorFeature, isUploadRootDirWithExpectedPrefix)
 	return c.ErrorFeature.StepError()
 }
 
-func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPIWithFiles(id string, count int) error {
+func (c *Component) interactiveShouldBeUpdatedAsAFailureViaTheInteractivesAPI(id string) error {
 	assert.Equal(&c.ErrorFeature, 1, len(c.InteractivesAPI.PatchInteractiveCalls()))
 	firstCall := c.InteractivesAPI.PatchInteractiveCalls()[0]
 	assert.Equal(&c.ErrorFeature, id, firstCall.S3)

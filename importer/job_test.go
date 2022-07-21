@@ -18,37 +18,6 @@ var (
 	cfg = &config.Config{}
 )
 
-func TestJobAdd(t *testing.T) {
-
-	Convey("Given a healthy interactives api", t, func() {
-		mockInteractivesAPI := &mocks_importer.InteractivesAPIClientMock{
-			PatchInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, req interactives.PatchRequest) (interactives.Interactive, error) {
-				return interactives.Interactive{}, nil
-			},
-		}
-
-		Convey("And a new upload job", func() {
-			uploadJob := importer.NewJob(context.TODO(), cfg, mockInteractivesAPI)
-
-			Convey("Then there should be an expected error when we add new files concurrently", func() {
-				goRoutineCount := 1000
-
-				wg := sync.WaitGroup{}
-				wg.Add(goRoutineCount)
-				for i := 0; i < goRoutineCount; i++ {
-					go func() {
-						uploadJob.Add(&importer.InteractivesUploaded{}, &interactives.ArchiveFile{})
-						wg.Done()
-					}()
-				}
-				wg.Wait()
-
-				So(len(mockInteractivesAPI.PatchInteractiveCalls()), ShouldEqual, goRoutineCount)
-			})
-		})
-	})
-}
-
 func TestJobFinish(t *testing.T) {
 	anErr := errors.New("an error")
 	logData := log.Data{}
