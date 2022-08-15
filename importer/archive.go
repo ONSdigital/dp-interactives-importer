@@ -28,12 +28,14 @@ var (
 type matcher func(string, string) bool
 
 type File struct {
-	Context     context.Context
-	ReadCloser  io.ReadCloser
-	Name        string
-	MimeType    string
-	SizeInBytes int64
-	Closed      bool
+	Context      context.Context
+	ReadCloser   io.ReadCloser
+	Name         string
+	MimeType     string
+	SizeInBytes  int64
+	Closed       bool
+	CollectionID string
+	RootPath     string
 }
 
 type batch struct {

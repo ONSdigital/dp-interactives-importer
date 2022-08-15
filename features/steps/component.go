@@ -101,6 +101,13 @@ func NewInteractivesImporterComponent() (*Component, error) {
 	}
 
 	c.InteractivesAPI = &mocks_importer.InteractivesAPIClientMock{
+		GetInteractiveFunc: func(contextMoqParam context.Context, s1 string, s2 string, s3 string) (interactives.Interactive, error) {
+			if s3 == "valid-1" {
+				return interactives.Interactive{ID: s3, Metadata: &interactives.Metadata{CollectionID: "collection-id"}}, nil
+			} else {
+				return interactives.Interactive{}, nil
+			}
+		},
 		PatchInteractiveFunc: func(ctx context.Context, userAuthToken string, serviceAuthToken string, interactiveID string, req interactives.PatchRequest) (interactives.Interactive, error) {
 			return interactives.Interactive{}, nil
 		},

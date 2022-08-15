@@ -30,6 +30,7 @@ func TestUploadService(t *testing.T) {
 			Name:        filename,
 			ReadCloser:  ioutil.NopCloser(strings.NewReader(testContent)),
 			SizeInBytes: size,
+			RootPath:    rootPath,
 		}
 
 		Convey("And a healthy upload service backend", func() {
@@ -41,14 +42,14 @@ func TestUploadService(t *testing.T) {
 			svc := importer.NewUploadService(mockBackend)
 
 			Convey("Then there should be no error when we send the file", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f, rootPath)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
 
 				So(err, ShouldBeNil)
 				So(f, ShouldEqual, rootPath+"/root/dir/testing.css")
 			})
 
 			Convey("Then there should be no error when we send the file and the event has some existing files", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f, rootPath)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/version-2/root/dir/testing.css"), f)
 
 				So(err, ShouldBeNil)
 				So(f, ShouldEqual, rootPath+"/root/dir/testing.css")
@@ -56,7 +57,7 @@ func TestUploadService(t *testing.T) {
 			})
 
 			Convey("Then there should be no error when we send the file and the event has some existing files without versioned path", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/root/dir/testing.css"), f, rootPath)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename, "/interactives/id/root/dir/testing.css"), f)
 
 				So(err, ShouldBeNil)
 				So(f, ShouldEqual, rootPath+"/root/dir/testing.css")
@@ -73,7 +74,7 @@ func TestUploadService(t *testing.T) {
 			svc := importer.NewUploadService(mockBackend)
 
 			Convey("Then there should be an expected error when we send the file", func() {
-				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f, rootPath)
+				f, err := svc.SendFile(context.TODO(), getTestEvent(filename), f)
 
 				So(err, ShouldNotBeNil)
 				So(f, ShouldBeEmpty)

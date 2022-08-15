@@ -23,9 +23,9 @@ type UploadService struct {
 	backend UploadServiceBackend
 }
 
-func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploaded, f *File, uploadRootPath string) (string, error) {
+func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploaded, f *File) (string, error) {
 	metadata := upload.Metadata{
-		Path:          uploadRootPath,
+		Path:          f.RootPath,
 		IsPublishable: true,
 		Title:         event.Title,
 		FileSizeBytes: f.SizeInBytes,
@@ -33,6 +33,7 @@ func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploade
 		License:       licenseName,
 		LicenseURL:    licenseURL,
 		FileName:      f.Name,
+		CollectionID:  &f.CollectionID,
 	}
 
 	err := s.backend.Upload(ctx, f.ReadCloser, metadata)

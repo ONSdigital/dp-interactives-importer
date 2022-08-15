@@ -23,6 +23,7 @@ type UploadServiceBackend interface {
 }
 
 type InteractivesAPIClient interface {
+	GetInteractive(context.Context, string, string, string) (interactives.Interactive, error)
 	PatchInteractive(context.Context, string, string, string, interactives.PatchRequest) (interactives.Interactive, error)
 	Checker(ctx context.Context, state *health.CheckState) error
 }

@@ -41,6 +41,19 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 	logData["path"] = event.Path
 	logData["title"] = event.Title
 
+	log.Info(ctx, "get interactive", logData)
+	interactive, err := h.InteractivesAPIClient.GetInteractive(ctx, "", h.Cfg.ServiceAuthToken, event.ID)
+	if err != nil {
+		log.Error(ctx, "cannot get interactive", err, logData)
+		return err
+	}
+
+	if interactive.Metadata == nil || interactive.Metadata.CollectionID == "" {
+		err = fmt.Errorf("interactive %s not associated to a collection", interactive.ID)
+		log.Error(ctx, "interactive not associated to a collection", err, logData)
+		return err
+	}
+
 	log.Info(ctx, "download zip file from s3", logData)
 	readCloser, size, err := h.S3.Get(event.Path)
 	if err != nil {
@@ -86,14 +99,16 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 		defer rc.Close()
 
 		file := &File{
-			Context:     ctx,
-			Name:        zip.Name,
-			ReadCloser:  rc,
-			SizeInBytes: int64(zip.UncompressedSize64),
-			MimeType:    mimetype,
+			Context:      ctx,
+			Name:         zip.Name,
+			ReadCloser:   rc,
+			SizeInBytes:  int64(zip.UncompressedSize64),
+			MimeType:     mimetype,
+			CollectionID: interactive.Metadata.CollectionID,
+			RootPath:     uploadRootPath,
 		}
 
-		_, err = h.UploadService.SendFile(ctx, event, file, uploadRootPath)
+		_, err = h.UploadService.SendFile(ctx, event, file)
 		return err
 	}
 	err = Process(h.Cfg.BatchSize, tmpZip.Name(), uploadFunc)

@@ -24,6 +24,9 @@ var _ importer.InteractivesAPIClient = &InteractivesAPIClientMock{}
 // 			CheckerFunc: func(ctx context.Context, state *health.CheckState) error {
 // 				panic("mock out the Checker method")
 // 			},
+// 			GetInteractiveFunc: func(contextMoqParam context.Context, s1 string, s2 string, s3 string) (interactives.Interactive, error) {
+// 				panic("mock out the GetInteractive method")
+// 			},
 // 			PatchInteractiveFunc: func(contextMoqParam context.Context, s1 string, s2 string, s3 string, patchRequest interactives.PatchRequest) (interactives.Interactive, error) {
 // 				panic("mock out the PatchInteractive method")
 // 			},
@@ -37,6 +40,9 @@ type InteractivesAPIClientMock struct {
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(ctx context.Context, state *health.CheckState) error
 
+	// GetInteractiveFunc mocks the GetInteractive method.
+	GetInteractiveFunc func(contextMoqParam context.Context, s1 string, s2 string, s3 string) (interactives.Interactive, error)
+
 	// PatchInteractiveFunc mocks the PatchInteractive method.
 	PatchInteractiveFunc func(contextMoqParam context.Context, s1 string, s2 string, s3 string, patchRequest interactives.PatchRequest) (interactives.Interactive, error)
 
@@ -48,6 +54,17 @@ type InteractivesAPIClientMock struct {
 			Ctx context.Context
 			// State is the state argument value.
 			State *health.CheckState
+		}
+		// GetInteractive holds details about calls to the GetInteractive method.
+		GetInteractive []struct {
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+			// S1 is the s1 argument value.
+			S1 string
+			// S2 is the s2 argument value.
+			S2 string
+			// S3 is the s3 argument value.
+			S3 string
 		}
 		// PatchInteractive holds details about calls to the PatchInteractive method.
 		PatchInteractive []struct {
@@ -64,6 +81,7 @@ type InteractivesAPIClientMock struct {
 		}
 	}
 	lockChecker          sync.RWMutex
+	lockGetInteractive   sync.RWMutex
 	lockPatchInteractive sync.RWMutex
 }
 
@@ -99,6 +117,49 @@ func (mock *InteractivesAPIClientMock) CheckerCalls() []struct {
 	mock.lockChecker.RLock()
 	calls = mock.calls.Checker
 	mock.lockChecker.RUnlock()
+	return calls
+}
+
+// GetInteractive calls GetInteractiveFunc.
+func (mock *InteractivesAPIClientMock) GetInteractive(contextMoqParam context.Context, s1 string, s2 string, s3 string) (interactives.Interactive, error) {
+	if mock.GetInteractiveFunc == nil {
+		panic("InteractivesAPIClientMock.GetInteractiveFunc: method is nil but InteractivesAPIClient.GetInteractive was just called")
+	}
+	callInfo := struct {
+		ContextMoqParam context.Context
+		S1              string
+		S2              string
+		S3              string
+	}{
+		ContextMoqParam: contextMoqParam,
+		S1:              s1,
+		S2:              s2,
+		S3:              s3,
+	}
+	mock.lockGetInteractive.Lock()
+	mock.calls.GetInteractive = append(mock.calls.GetInteractive, callInfo)
+	mock.lockGetInteractive.Unlock()
+	return mock.GetInteractiveFunc(contextMoqParam, s1, s2, s3)
+}
+
+// GetInteractiveCalls gets all the calls that were made to GetInteractive.
+// Check the length with:
+//     len(mockedInteractivesAPIClient.GetInteractiveCalls())
+func (mock *InteractivesAPIClientMock) GetInteractiveCalls() []struct {
+	ContextMoqParam context.Context
+	S1              string
+	S2              string
+	S3              string
+} {
+	var calls []struct {
+		ContextMoqParam context.Context
+		S1              string
+		S2              string
+		S3              string
+	}
+	mock.lockGetInteractive.RLock()
+	calls = mock.calls.GetInteractive
+	mock.lockGetInteractive.RUnlock()
 	return calls
 }
 

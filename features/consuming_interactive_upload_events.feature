@@ -1,5 +1,12 @@
 Feature: Consuming messages from Kafka
 
+  Scenario: dp-interactives-api has sent a message with an invalid interactive id
+    Given these events are consumed:
+      | ID        | Path                         |
+      | invalid-1 | test_zips/does_not_exist.zip |
+    Then "0" interactives should be uploaded via the upload service
+    And "invalid-1" interactive should be updated as a failure via the interactives API
+
   Scenario: dp-interactives-api has sent a message with a non-existent zip file
     Given these events are consumed:
       | ID      | Path                     |
