@@ -4,13 +4,14 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/ONSdigital/dp-interactives-importer/config"
 	"github.com/ONSdigital/dp-interactives-importer/schema"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/log.go/v2/log"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	"io"
-	"os"
 )
 
 type InteractivesUploadedHandler struct {
@@ -40,6 +41,7 @@ func (h *InteractivesUploadedHandler) Handle(ctx context.Context, workerID int, 
 	logData["id"] = event.ID
 	logData["path"] = event.Path
 	logData["title"] = event.Title
+	logData["collection_id"] = event.CollectionID
 
 	log.Info(ctx, "download zip file from s3", logData)
 	readCloser, size, err := h.S3.Get(event.Path)

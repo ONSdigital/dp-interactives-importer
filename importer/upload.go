@@ -3,6 +3,7 @@ package importer
 import (
 	"context"
 	"fmt"
+
 	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
 )
 
@@ -25,6 +26,7 @@ type UploadService struct {
 
 func (s *UploadService) SendFile(ctx context.Context, event *InteractivesUploaded, f *File, uploadRootPath string) (string, error) {
 	metadata := upload.Metadata{
+		CollectionID:  &event.CollectionID,
 		Path:          uploadRootPath,
 		IsPublishable: true,
 		Title:         event.Title,
