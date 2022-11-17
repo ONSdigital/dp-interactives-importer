@@ -43,7 +43,6 @@ func Get() (*Config, error) {
 		UploadAPIURL:               "http://localhost:25100",
 		InteractivesAPIURL:         "http://localhost:27500",
 		AwsRegion:                  "eu-west-1",
-		AwsEndpoint:                "http://localhost:4566",
 		DownloadBucketName:         "dp-interactives-file-uploads",
 		Brokers:                    []string{"localhost:9092"},
 		KafkaVersion:               "1.0.2",
