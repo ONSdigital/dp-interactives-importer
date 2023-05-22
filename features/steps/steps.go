@@ -2,6 +2,7 @@ package steps_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -47,7 +48,7 @@ func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
 
 	// consume extracted observations
 	for _, e := range events {
-		if err := sendToConsumer(c.KafkaConsumer, e); err != nil {
+		if err := sendToConsumer(c.kafkaConsumer.Mock, e); err != nil {
 			return err
 		}
 	}
@@ -81,7 +82,11 @@ func sendToConsumer(kafka kafka.IConsumerGroup, e *importer.InteractivesUploaded
 		return err
 	}
 
-	kafka.Channels().Upstream <- kafkatest.NewMessage(bytes, 0)
+	msg, err := kafkatest.NewMessage(bytes, 0)
+	if err != nil {
+		return fmt.Errorf("failed to create new message: %w", err)
+	}
+	kafka.Channels().Upstream <- msg
 	return nil
 }
 

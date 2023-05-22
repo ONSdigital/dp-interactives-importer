@@ -5,6 +5,11 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-clients-go/v2/interactives"
 	"github.com/ONSdigital/dp-api-clients-go/v2/upload"
@@ -18,21 +23,19 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"os"
 )
 
 var (
 	//go:embed test/*
-	testZips embed.FS
-	zero     = int64(0)
+	testZips           embed.FS
+	zero               = int64(0)
+	ComponentTestGroup = "component-test" // kafka group name for the component test consumer
 )
 
 type Component struct {
 	ErrorFeature         component_test.ErrorFeature
 	serviceList          *service.ExternalServiceList
-	KafkaConsumer        kafka.IConsumerGroup
+	kafkaConsumer        *kafkatest.Consumer
 	S3Client             *mocks_importer.S3InterfaceMock
 	UploadServiceBackend *mocks_importer.UploadServiceBackendMock
 	InteractivesAPI      *mocks_importer.InteractivesAPIClientMock
@@ -45,13 +48,34 @@ func NewInteractivesImporterComponent() (*Component, error) {
 		errorChan: make(chan error),
 	}
 
-	consumer := kafkatest.NewMessageConsumer(true)
-	consumer.CheckerFunc = funcCheck
-	consumer.RegisterHandlerFunc = func(ctx context.Context, h kafka.Handler) error {
+	// Read config
+	cfg, err := config.Get()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get config: %w", err)
+	}
+
+	ctx := context.Background()
+
+	kafkaOffset := kafka.OffsetOldest
+	if c.kafkaConsumer, err = kafkatest.NewConsumer(
+		ctx,
+		&kafka.ConsumerGroupConfig{
+			BrokerAddrs:  cfg.Brokers,
+			Topic:        cfg.InteractivesReadTopic,
+			GroupName:    ComponentTestGroup,
+			KafkaVersion: &cfg.KafkaVersion,
+			Offset:       &kafkaOffset,
+		},
+		nil,
+	); err != nil {
+		return nil, fmt.Errorf("error creating kafka consumer: %w", err)
+	}
+	c.kafkaConsumer.Mock.CheckerFunc = funcCheck
+	c.kafkaConsumer.Mock.RegisterHandlerFunc = func(ctx context.Context, h kafka.Handler) error {
 		go func() {
 			for {
 				select {
-				case message, ok := <-consumer.Channels().Upstream:
+				case message, ok := <-c.kafkaConsumer.Mock.Channels().Upstream:
 					if !ok {
 						return
 					}
@@ -60,15 +84,14 @@ func NewInteractivesImporterComponent() (*Component, error) {
 						return
 					}
 					message.Release()
-				case <-consumer.Channels().Closer:
+				case <-c.kafkaConsumer.Mock.Channels().Closer:
 					return
 				}
 			}
 		}()
 		return nil
 	}
-	consumer.StartFunc = func() error { return nil }
-	c.KafkaConsumer = consumer
+	c.kafkaConsumer.Mock.StartFunc = func() error { return nil }
 
 	raw, err := testZips.ReadFile("test/test_zips.zip")
 	if err != nil {
@@ -131,7 +154,7 @@ func (c *Component) Reset() {
 
 func DoGetConsumer(c *Component) func(context.Context, *config.Config) (kafka.IConsumerGroup, error) {
 	return func(_ context.Context, _ *config.Config) (kafka.IConsumerGroup, error) {
-		return c.KafkaConsumer, nil
+		return c.kafkaConsumer.Mock, nil
 	}
 }
 
