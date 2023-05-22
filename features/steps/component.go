@@ -35,7 +35,7 @@ var (
 type Component struct {
 	ErrorFeature         component_test.ErrorFeature
 	serviceList          *service.ExternalServiceList
-	kafkaConsumer        *kafkatest.Consumer
+	KafkaConsumer        *kafkatest.Consumer
 	S3Client             *mocks_importer.S3InterfaceMock
 	UploadServiceBackend *mocks_importer.UploadServiceBackendMock
 	InteractivesAPI      *mocks_importer.InteractivesAPIClientMock
@@ -57,7 +57,7 @@ func NewInteractivesImporterComponent() (*Component, error) {
 	ctx := context.Background()
 
 	kafkaOffset := kafka.OffsetOldest
-	if c.kafkaConsumer, err = kafkatest.NewConsumer(
+	if c.KafkaConsumer, err = kafkatest.NewConsumer(
 		ctx,
 		&kafka.ConsumerGroupConfig{
 			BrokerAddrs:  cfg.Brokers,
@@ -70,12 +70,12 @@ func NewInteractivesImporterComponent() (*Component, error) {
 	); err != nil {
 		return nil, fmt.Errorf("error creating kafka consumer: %w", err)
 	}
-	c.kafkaConsumer.Mock.CheckerFunc = funcCheck
-	c.kafkaConsumer.Mock.RegisterHandlerFunc = func(ctx context.Context, h kafka.Handler) error {
+	c.KafkaConsumer.Mock.CheckerFunc = funcCheck
+	c.KafkaConsumer.Mock.RegisterHandlerFunc = func(ctx context.Context, h kafka.Handler) error {
 		go func() {
 			for {
 				select {
-				case message, ok := <-c.kafkaConsumer.Mock.Channels().Upstream:
+				case message, ok := <-c.KafkaConsumer.Mock.Channels().Upstream:
 					if !ok {
 						return
 					}
@@ -84,14 +84,14 @@ func NewInteractivesImporterComponent() (*Component, error) {
 						return
 					}
 					message.Release()
-				case <-c.kafkaConsumer.Mock.Channels().Closer:
+				case <-c.KafkaConsumer.Mock.Channels().Closer:
 					return
 				}
 			}
 		}()
 		return nil
 	}
-	c.kafkaConsumer.Mock.StartFunc = func() error { return nil }
+	c.KafkaConsumer.Mock.StartFunc = func() error { return nil }
 
 	raw, err := testZips.ReadFile("test/test_zips.zip")
 	if err != nil {
@@ -154,7 +154,7 @@ func (c *Component) Reset() {
 
 func DoGetConsumer(c *Component) func(context.Context, *config.Config) (kafka.IConsumerGroup, error) {
 	return func(_ context.Context, _ *config.Config) (kafka.IConsumerGroup, error) {
-		return c.kafkaConsumer.Mock, nil
+		return c.KafkaConsumer.Mock, nil
 	}
 }
 

@@ -48,7 +48,7 @@ func (c *Component) theseEventsAreConsumed(table *godog.Table) error {
 
 	// consume extracted observations
 	for _, e := range events {
-		if err := sendToConsumer(c.kafkaConsumer.Mock, e); err != nil {
+		if err := sendToConsumer(c.KafkaConsumer.Mock, e); err != nil {
 			return err
 		}
 	}
