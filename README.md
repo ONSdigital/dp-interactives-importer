@@ -1,5 +1,9 @@
 # dp-interactives-importer
 
+***
+:warning: This repository will be archived in November 2023 as it is no longer in development. :warning:
+***
+
 Listens on a kafka topic for new interactives import events. When a new event is picked up it will:
 - download zip file from an S3 bucket used for temporary storage between services
 - unzip the file
